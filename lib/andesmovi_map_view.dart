@@ -32,9 +32,9 @@ class _AndesMoviMapViewState extends State<AndesMoviMapView> {
   bool _isNavigationMode = true;
 
   static const String _osmDayTileUrl =
-      'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+      'https://a.tile.opentopomap.org/{z}/{x}/{y}.png';
   static const String _osmNightTileUrl =
-      'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png';
+      'https://a.tile.opentopomap.org/{z}/{x}/{y}.png';
 
   Timer? _gpsTimer;
   int _step = 0;

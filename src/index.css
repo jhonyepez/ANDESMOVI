@@ -63,17 +63,27 @@
   box-shadow: none !important;
 }
 
-/* Estilo para Modo Oscuro en Leaflet sin API Key */
+/* Estilo para Modo Oscuro en Leaflet usando CartoDB Dark Matter nativo */
 .dark-map .leaflet-tile-pane,
 .dark-map-theme .leaflet-tile-pane,
 .dark-map-tiles .leaflet-tile {
-  filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) !important;
+  filter: none !important;
+  opacity: 1 !important;
 }
 
-/* En modo claro no lleva filtro */
+/* En modo claro no lleva filtro (CartoDB Positron nativo) */
 .light-map .leaflet-tile-pane,
 .light-map-theme .leaflet-tile-pane {
   filter: none !important;
+  opacity: 1 !important;
+}
+
+/* Optimización para WebViews de Android e iOS (renderizado fluido sin parpadeos) */
+.leaflet-tile {
+  -webkit-backface-visibility: hidden !important;
+  backface-visibility: hidden !important;
+  will-change: transform !important;
+  image-rendering: -webkit-optimize-contrast !important;
 }
 
 /* Ocultar panel de texto plano turn-by-turn de leaflet-routing-machine para mantener la UI limpia */

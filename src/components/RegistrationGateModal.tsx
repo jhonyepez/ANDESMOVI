@@ -14,6 +14,7 @@ import {
 import { LegalTermsModal, LegalDocType } from './LegalTermsModal';
 import { processLoginSessionMiddleware } from '../services/sessionMiddleware';
 import { queryCriminalRecordByCedula, CriminalRecordResult } from '../services/ministerioInteriorService';
+import { databaseService } from '../services/databaseService';
 import {
   ShieldCheck,
   CreditCard,
@@ -609,6 +610,23 @@ export const RegistrationGateModal: React.FC<RegistrationGateModalProps> = ({
         : [],
     };
 
+    // Registrar cuenta con credenciales en databaseService
+    databaseService.registerNewAccount({
+      id: newUser.id,
+      name: newUser.name,
+      email: newUser.email,
+      phone: newUser.phone,
+      cedula: newUser.cedula,
+      password: password,
+      role: newUser.role,
+      province: newUser.province,
+      canton: newUser.canton,
+      avatar: newUser.avatar,
+      vehicleModel: vehicleModel,
+      plate: vehiclePlate,
+      vehicleType: selectedVehicleType,
+    });
+
     const sessionResult = processLoginSessionMiddleware(newUser);
 
     setTimeout(() => {
@@ -617,7 +635,7 @@ export const RegistrationGateModal: React.FC<RegistrationGateModalProps> = ({
     }, 900);
   };
 
-  // Submit Login (if returning user)
+  // Submit Login (if returning user) con validación estricta
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError(null);
@@ -633,167 +651,22 @@ export const RegistrationGateModal: React.FC<RegistrationGateModalProps> = ({
       return;
     }
 
-    // Verificar cuentas oficiales de prueba en Tulcán
-    if (identifier === 'conductor1@andesmovi.com') {
-      if (loginPassword !== 'AndesMovi2026*Taxi') {
-        setLoginError('Contraseña incorrecta para Conductor Taxi (Usar: AndesMovi2026*Taxi).');
-        return;
-      }
-      setIsSubmitting(true);
-      setTimeout(() => {
-        setIsSubmitting(false);
-        const loggedUser: UserProfile = {
-          id: 'usr-cond-01',
-          name: 'Carlos Mendoza (Unidad 01)',
-          email: 'conductor1@andesmovi.com',
-          phone: '+593 99 123 4567',
-          cedula: '1004721351',
-          cedulaVerified: true,
-          province: 'Carchi',
-          canton: 'Tulcán',
-          avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80',
-          authProvider: 'email',
-          rating: 4.9,
-          totalTripsCompleted: 1420,
-          isVerified: true,
-          createdAt: Date.now() - 86400000 * 60,
-          role: 'conductor',
-          isRegistrationComplete: true,
-        };
-        try {
-          localStorage.setItem('andesmovi_wallet_balance', '20.00');
-        } catch {}
-        const sessionResult = processLoginSessionMiddleware(loggedUser);
-        setSuccessAnimation(true);
-        setTimeout(() => {
-          onLoginSuccess(sessionResult.user);
-        }, 700);
-      }, 500);
-      return;
-    }
+    const authResult = databaseService.authenticateUser(identifier, loginPassword, accountRole);
 
-    if (identifier === 'moto1@andesmovi.com') {
-      if (loginPassword !== 'AndesMovi2026*Moto') {
-        setLoginError('Contraseña incorrecta para Moto Delivery (Usar: AndesMovi2026*Moto).');
-        return;
-      }
-      setIsSubmitting(true);
-      setTimeout(() => {
-        setIsSubmitting(false);
-        const loggedUser: UserProfile = {
-          id: 'usr-moto-01',
-          name: 'Javier Alvear (Moto Reparto 01)',
-          email: 'moto1@andesmovi.com',
-          phone: '+593 98 456 7890',
-          cedula: '1004567663',
-          cedulaVerified: true,
-          province: 'Carchi',
-          canton: 'Tulcán',
-          avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80',
-          authProvider: 'email',
-          rating: 4.8,
-          totalTripsCompleted: 980,
-          isVerified: true,
-          createdAt: Date.now() - 86400000 * 50,
-          role: 'conductor',
-          isRegistrationComplete: true,
-        };
-        try {
-          localStorage.setItem('andesmovi_wallet_balance', '15.00');
-        } catch {}
-        const sessionResult = processLoginSessionMiddleware(loggedUser);
-        setSuccessAnimation(true);
-        setTimeout(() => {
-          onLoginSuccess(sessionResult.user);
-        }, 700);
-      }, 500);
-      return;
-    }
-
-    if (identifier === 'cliente1@andesmovi.com') {
-      if (loginPassword !== 'AndesMovi2026*Cliente') {
-        setLoginError('Contraseña incorrecta para Cliente (Usar: AndesMovi2026*Cliente).');
-        return;
-      }
-      setIsSubmitting(true);
-      setTimeout(() => {
-        setIsSubmitting(false);
-        const loggedUser: UserProfile = {
-          id: 'usr-cli-01',
-          name: 'María Fernanda Benalcázar',
-          email: 'cliente1@andesmovi.com',
-          phone: '+593 98 765 4321',
-          cedula: '1710034065',
-          cedulaVerified: true,
-          province: 'Carchi',
-          canton: 'Tulcán',
-          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-          authProvider: 'email',
-          rating: 5.0,
-          totalTripsCompleted: 35,
-          isVerified: true,
-          createdAt: Date.now() - 86400000 * 20,
-          role: 'cliente',
-          isRegistrationComplete: true,
-        };
-        const sessionResult = processLoginSessionMiddleware(loggedUser);
-        setSuccessAnimation(true);
-        setTimeout(() => {
-          onLoginSuccess(sessionResult.user);
-        }, 700);
-      }, 500);
-      return;
-    }
-
-    // Check if custom password was saved via recovery
-    const savedCustomPass = typeof window !== 'undefined'
-      ? localStorage.getItem('andesmovi_pass_' + loginIdentifier.trim().toLowerCase())
-      : null;
-
-    if (savedCustomPass && loginPassword !== savedCustomPass) {
-      setLoginError('Contraseña incorrecta. Utiliza tu nueva contraseña recuperada.');
-      return;
-    }
-
-    if (loginPassword.length < 4) {
-      setLoginError('La contraseña debe tener al menos 4 caracteres.');
+    if (!authResult.success || !authResult.user) {
+      setLoginError('Correo o contraseña incorrectos');
       return;
     }
 
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
-
-      const isConductor = accountRole === 'conductor';
-      const isCedulaNum = /^\d{10}$/.test(loginIdentifier.replace(/\D/g, ''));
-      const loggedUser: UserProfile = {
-        id: `usr-${Date.now()}`,
-        name: isConductor
-          ? (isCedulaNum ? `Conductor C.I. ${loginIdentifier}` : 'Patricio Javier Morales')
-          : (isCedulaNum ? `Cliente C.I. ${loginIdentifier}` : 'María Elena Viteri'),
-        email: loginIdentifier.includes('@') ? loginIdentifier : `${loginIdentifier}@andesmovi.ec`,
-        phone: !loginIdentifier.includes('@') && !isCedulaNum ? loginIdentifier : '0998241902',
-        cedula: isCedulaNum ? loginIdentifier : (isConductor ? '1004721351' : '1710034065'),
-        cedulaVerified: true,
-        province: 'Carchi (Tulcán)',
-        avatar: isConductor
-          ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
-          : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
-        authProvider: isCedulaNum ? 'cedula' : 'email',
-        rating: 5.0,
-        totalTripsCompleted: isConductor ? 48 : 15,
-        isVerified: true,
-        createdAt: Date.now() - 86400000 * 30,
-        role: accountRole,
-        isRegistrationComplete: true,
-      };
-
-      const sessionResult = processLoginSessionMiddleware(loggedUser);
+      const sessionResult = processLoginSessionMiddleware(authResult.user!);
       setSuccessAnimation(true);
       setTimeout(() => {
         onLoginSuccess(sessionResult.user);
       }, 700);
-    }, 600);
+    }, 500);
   };
 
   return (

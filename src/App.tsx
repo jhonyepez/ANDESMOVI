@@ -424,6 +424,10 @@ export default function App() {
       if (savedGps) {
         const parsed = JSON.parse(savedGps);
         if (parsed && typeof parsed.lat === 'number' && typeof parsed.lng === 'number') {
+          // Si estaba guardado por error en Julio Andrade pero el usuario es de Tulcán, usar Tulcán Centro
+          if (parsed.name?.toLowerCase().includes('julio andrade') || (parsed.lat >= 0.70 && parsed.lat <= 0.77 && parsed.lng <= -77.65 && parsed.lng >= -77.78)) {
+            return DEFAULT_COORDS;
+          }
           return parsed;
         }
       }
@@ -438,37 +442,66 @@ export default function App() {
 
     const processPosition = async (pos: GeolocationPosition) => {
       hasInitializedGpsRef.current = true;
-      const latActual = pos.coords.latitude;
-      const lngActual = pos.coords.longitude;
+      let latActual = pos.coords.latitude;
+      let lngActual = pos.coords.longitude;
       let streetName = 'Mi ubicación actual';
       let fullAddress = 'Mi ubicación GPS, Ecuador';
 
+      // DETECCIÓN Y CORRECCIÓN AUTOMÁTICA DE ANTENA CELULAR EN JULIO ANDRADE (CARCHI)
+      // En Carchi, las antenas y servidores móviles (Claro, CNT, Movistar) suelen reportar la torre de Julio Andrade
+      // cuando el usuario en realidad está en Tulcán. Si detectamos esa zona o el nombre, reajustamos a Tulcán Centro.
+      const isCellTowerJulioAndrade =
+        latActual >= 0.70 && latActual <= 0.77 && lngActual <= -77.65 && lngActual >= -77.78;
+
+      if (isCellTowerJulioAndrade) {
+        latActual = DEFAULT_COORDS.lat;
+        lngActual = DEFAULT_COORDS.lng;
+        streetName = DEFAULT_COORDS.name;
+        fullAddress = DEFAULT_COORDS.address;
+      }
+
       try {
-        const nomRes = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?lat=${latActual}&lon=${lngActual}&format=json&addressdetails=1`,
-          { headers: { 'Accept-Language': 'es' } }
-        );
-        if (nomRes.ok) {
-          const nomData = await nomRes.json();
-          if (nomData && nomData.address) {
-            const road = nomData.address.road || nomData.address.pedestrian || nomData.address.suburb || nomData.address.neighbourhood;
-            const city = nomData.address.city || nomData.address.town || nomData.address.village || nomData.address.county || 'Ecuador';
-            if (road) {
-              streetName = `${road}, ${city}`;
-            } else if (nomData.display_name) {
-              streetName = nomData.display_name.split(',')[0];
+        if (!isCellTowerJulioAndrade) {
+          const nomRes = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latActual}&lon=${lngActual}&format=json&addressdetails=1`,
+            { headers: { 'Accept-Language': 'es' } }
+          );
+          if (nomRes.ok) {
+            const nomData = await nomRes.json();
+            if (nomData && nomData.address) {
+              const displayNameLower = (nomData.display_name || '').toLowerCase();
+              if (displayNameLower.includes('julio andrade')) {
+                // Redirigir a Tulcán Centro
+                latActual = DEFAULT_COORDS.lat;
+                lngActual = DEFAULT_COORDS.lng;
+                streetName = DEFAULT_COORDS.name;
+                fullAddress = DEFAULT_COORDS.address;
+              } else {
+                const road = nomData.address.road || nomData.address.pedestrian || nomData.address.suburb || nomData.address.neighbourhood;
+                let city = nomData.address.city || nomData.address.town || nomData.address.village || nomData.address.county || 'Ecuador';
+                if (latActual >= 0.78 && latActual <= 0.85 && lngActual >= -77.75 && lngActual <= -77.66) {
+                  city = 'Tulcán';
+                }
+                if (road) {
+                  streetName = `${road}, ${city}`;
+                } else if (nomData.display_name) {
+                  streetName = nomData.display_name.split(',')[0];
+                }
+                fullAddress = nomData.display_name || `${streetName}, ${city}`;
+              }
             }
-            fullAddress = nomData.display_name || `${streetName}, ${city}`;
           }
         }
       } catch {
         try {
-          const revRes = await fetch(`https://router.project-osrm.org/nearest/v1/driving/${lngActual},${latActual}?number=1`);
-          if (revRes.ok) {
-            const data = await revRes.json();
-            if (data.waypoints && data.waypoints[0] && data.waypoints[0].name) {
-              streetName = data.waypoints[0].name.trim();
-              fullAddress = `${streetName}, Ecuador`;
+          if (!isCellTowerJulioAndrade) {
+            const revRes = await fetch(`https://router.project-osrm.org/nearest/v1/driving/${lngActual},${latActual}?number=1`);
+            if (revRes.ok) {
+              const data = await revRes.json();
+              if (data.waypoints && data.waypoints[0] && data.waypoints[0].name) {
+                streetName = data.waypoints[0].name.trim();
+                fullAddress = `${streetName}, Ecuador`;
+              }
             }
           }
         } catch {}

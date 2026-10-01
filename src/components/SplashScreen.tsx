@@ -637,10 +637,11 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
     }
   };
 
-  // 5. Direct Login via Master Credentials or Conductor / Cliente Account
+  // 5. Direct Login via Fixed Credentials & Registered Accounts
   const handleDirectLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!loginIdentifier.trim()) {
+    const cleanUser = loginIdentifier.trim();
+    if (!cleanUser) {
       setErrorMessage('Ingresa tu Cédula, Correo o Celular');
       haptic.warning();
       return;
@@ -651,111 +652,31 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
       return;
     }
 
-    const cleanUser = loginIdentifier.trim();
-    const isMasterUser = cleanUser.toLowerCase() === 'dueñoandesmovi' || cleanUser === '1004721351';
-    const isMasterPass = loginPassword === '1004721351Dueño';
-
-    if (isMasterUser) {
-      if (!isMasterPass) {
-        haptic.warning();
-        setErrorMessage('Acceso denegado. Contraseña incorrecta para Administrador / Dueño.');
-        setIsProcessing(false);
-        return;
-      }
-
-      haptic.tap();
-      setIsProcessing(true);
-      setErrorMessage(null);
-
-      setTimeout(() => {
-        setIsProcessing(false);
-
-        const adminUser: UserProfile = {
-          id: `usr-owner-${Date.now()}`,
-          name: 'Super Administrador (Dueño)',
-          email: 'dueñoandesmovi@andesmovi.ec',
-          phone: '+593 99 000 0000',
-          cedula: '1004721351',
-          cedulaVerified: true,
-          province: 'Tulcán (Carchi) - Matriz Nacional',
-          avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
-          authProvider: 'cedula',
-          rating: 5.0,
-          totalTripsCompleted: 9999,
-          isVerified: true,
-          createdAt: Date.now(),
-          role: 'admin',
-          isRegistrationComplete: true,
-        };
-
-        try {
-          localStorage.setItem('andesmovi_master_session', JSON.stringify(adminUser));
-          localStorage.setItem('andesmovi_user_session', JSON.stringify(adminUser));
-        } catch (err) {}
-
-        setSuccessMessage('¡Acceso Maestro concedido! Bienvenido Dueño y Administrador.');
-        haptic.success();
-
-        setTimeout(() => {
-          setIsClosing(true);
-          setTimeout(() => {
-            onLoginSuccess(adminUser);
-          }, 200);
-        }, 600);
-      }, 600);
-      return;
-    }
-
-    // Check if custom recovered password exists for this user
-    const savedCustomPass = typeof window !== 'undefined'
-      ? localStorage.getItem('andesmovi_pass_' + cleanUser.toLowerCase())
-      : null;
-
-    if (savedCustomPass && loginPassword !== savedCustomPass) {
-      haptic.warning();
-      setErrorMessage('Contraseña incorrecta. Utiliza tu nueva contraseña recuperada.');
-      return;
-    }
-
-    if (loginPassword.length < 4) {
-      haptic.warning();
-      setErrorMessage('La contraseña debe tener al menos 4 caracteres o recupérala si la olvidaste.');
-      return;
-    }
-
     haptic.tap();
     setIsProcessing(true);
     setErrorMessage(null);
 
     setTimeout(() => {
-      setIsProcessing(false);
-      const isConductor = selectedRole === 'conductor';
-      const isCedula = /^\d{10}$/.test(cleanUser);
-      const name = isConductor ? 'Patricio Javier Morales' : 'María Elena Viteri';
-      const cedulaNum = isCedula ? cleanUser : isConductor ? '1004721351' : '1710034065';
+      // Autenticación estricta contra base de datos local y cuentas maestras oficiales
+      const authResult = databaseService.authenticateUser(cleanUser, loginPassword, selectedRole);
 
-      const user: UserProfile = {
-        id: `usr-direct-${Date.now()}`,
-        name,
-        email: isCedula ? `${cleanUser}@andesmovi.ec` : cleanUser,
-        phone: '0998241902',
-        cedula: cedulaNum,
-        cedulaVerified: true,
-        province: 'Pichincha (Quito)',
-        avatar: isConductor
-          ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
-          : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
-        authProvider: isCedula ? 'cedula' : 'email',
-        rating: 5.0,
-        totalTripsCompleted: isConductor ? 120 : 15,
-        isVerified: true,
-        createdAt: Date.now(),
-        role: isConductor ? 'conductor' : 'cliente',
-        isRegistrationComplete: true,
-      };
+      if (!authResult.success || !authResult.user) {
+        setIsProcessing(false);
+        haptic.warning();
+        setErrorMessage(authResult.error || 'Correo o contraseña incorrectos');
+        return;
+      }
+
+      setIsProcessing(false);
+      const user = authResult.user;
+      const isConductor = user.role === 'conductor';
+      const cedulaNum = user.cedula || '1004721351';
 
       try {
         localStorage.setItem('andesmovi_user_session', JSON.stringify(user));
+        if (user.role === 'admin') {
+          localStorage.setItem('andesmovi_master_session', JSON.stringify(user));
+        }
       } catch (err) {}
 
       setSuccessMessage(`¡Bienvenido de nuevo, ${user.name}!`);
@@ -764,10 +685,10 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
       setTimeout(() => {
         setIsClosing(true);
         setTimeout(() => {
-          onLoginSuccess(user, isConductor ? buildDriverDocs(cedulaNum, name) : undefined);
+          onLoginSuccess(user, isConductor ? buildDriverDocs(cedulaNum, user.name) : undefined);
         }, 200);
-      }, 600);
-    }, 600);
+      }, 500);
+    }, 450);
   };
 
   // 6. Direct Register via Form
@@ -819,37 +740,34 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
     setTimeout(() => {
       setIsProcessing(false);
       const isConductor = selectedRole === 'conductor';
+      const cleanEmail = regEmail.trim().toLowerCase() || `${regCedula || Date.now()}@andesmovi.ec`;
 
-      const newUser: UserProfile = {
+      // Registrar cuenta persistente en databaseService para validación de logins futuros
+      const registeredProfile = databaseService.registerNewAccount({
         id: `usr-reg-${Date.now()}`,
-        name: regFullName,
-        email: regEmail || `${regCedula}@andesmovi.ec`,
-        phone: regPhone,
-        cedula: regCedula,
-        cedulaVerified: true,
-        province: regProvince,
-        avatar: isConductor
-          ? 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80'
-          : 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
-        authProvider: 'cedula',
-        rating: 5.0,
-        totalTripsCompleted: 0,
-        isVerified: true,
-        createdAt: Date.now(),
+        name: regFullName.trim(),
+        email: cleanEmail,
+        phone: regPhone.trim(),
+        cedula: regCedula.trim(),
+        password: regPassword,
         role: isConductor ? 'conductor' : 'cliente',
-        isRegistrationComplete: true,
-      };
+        province: regProvince,
+        canton: 'Tulcán',
+        vehicleType: regVehicleType === 'moto' ? 'moto' : 'auto',
+        plate: regPlate,
+        vehicleModel: regVehicleType === 'moto' ? 'Moto Reparto 150cc' : 'Chevrolet Sail 1.5L',
+      });
 
-      setSuccessMessage(`¡Cuenta creada con éxito! Bienvenido a AndesMovi Ecuador, ${newUser.name}`);
+      setSuccessMessage(`¡Cuenta creada con éxito! Bienvenido a AndesMovi Ecuador, ${registeredProfile.name}`);
       haptic.success();
 
       setTimeout(() => {
         setIsClosing(true);
         setTimeout(() => {
-          onLoginSuccess(newUser, isConductor ? buildDriverDocs(regCedula, regFullName) : undefined);
+          onLoginSuccess(registeredProfile, isConductor ? buildDriverDocs(regCedula, regFullName) : undefined);
         }, 200);
       }, 600);
-    }, 700);
+    }, 600);
   };
 
   // Navigation handlers
@@ -1509,6 +1427,49 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
                     Iniciar Sesión
                   </span>
                 </button>
+
+                {/* Cuentas autorizadas fijas para pruebas */}
+                <div className="pt-2 border-t border-zinc-800/80">
+                  <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                    <span>Cuentas con acceso autorizado</span>
+                    <span className="text-[9px] text-amber-400/90 font-mono">Validación Estricta</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLoginIdentifier('carlos.mendoza@andesmovi.ec');
+                        setLoginPassword('Conductor2026*');
+                        setSelectedRole('conductor');
+                        setErrorMessage(null);
+                        haptic.tap();
+                      }}
+                      className="p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800/90 border border-zinc-700/60 text-left transition-colors cursor-pointer group"
+                    >
+                      <div className="font-bold text-amber-300 flex items-center gap-1">
+                        <span>🚖 Conductor Taxi</span>
+                      </div>
+                      <div className="text-zinc-400 font-mono text-[9px] truncate">carlos.mendoza@andesmovi.ec</div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLoginIdentifier('cliente@andesmovi.ec');
+                        setLoginPassword('Cliente2026*');
+                        setSelectedRole('cliente');
+                        setErrorMessage(null);
+                        haptic.tap();
+                      }}
+                      className="p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800/90 border border-zinc-700/60 text-left transition-colors cursor-pointer group"
+                    >
+                      <div className="font-bold text-sky-300 flex items-center gap-1">
+                        <span>👤 Cliente AndesMovi</span>
+                      </div>
+                      <div className="text-zinc-400 font-mono text-[9px] truncate">cliente@andesmovi.ec</div>
+                    </button>
+                  </div>
+                </div>
               </form>
             ) : (
               /* FORMULARIO DE REGISTRO / CREAR CUENTA */

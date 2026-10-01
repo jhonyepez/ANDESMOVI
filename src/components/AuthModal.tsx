@@ -290,7 +290,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setLoginError(null);
 
     const cleanId = loginIdentifier.trim().toLowerCase();
-    const cleanDigits = loginIdentifier.replace(/\D/g, '');
 
     if (!cleanId) {
       setLoginError('Ingresa tu correo, cédula o número de celular');
@@ -301,99 +300,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       return;
     }
 
-    // Cuentas predefinidas del sistema AndesMovi
-    const predefinedAccounts = [
-      {
-        id: 'usr-jhon-admin',
-        name: 'Jhon Sebastian',
-        email: 'jhonsevadtisn@gmail.com',
-        cedula: '0401567890',
-        phone: '+593 99 841 2091',
-        password: 'AndesMovi2026!',
-        role: 'admin' as const,
-        province: 'Carchi',
-        canton: 'Tulcán',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-      },
-      {
-        id: 'usr-admin-master',
-        name: 'Administrador AndesMovi',
-        email: 'admin@andesmovi.ec',
-        cedula: '0401999888',
-        phone: '+593 99 000 0001',
-        password: 'Admin2026*',
-        role: 'admin' as const,
-        province: 'Carchi',
-        canton: 'Tulcán',
-      },
-      {
-        id: 'usr-client-mateo',
-        name: 'Mateo Morales',
-        email: 'mateo.morales.ec@gmail.com',
-        cedula: '1724589012',
-        phone: '+593 99 824 1902',
-        password: 'AndesMovi2026!',
-        role: 'cliente' as const,
-        province: 'Pichincha',
-        canton: 'Quito',
-        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
-      },
-      {
-        id: 'usr-client-maria',
-        name: 'María Belén Vaca',
-        email: 'cliente@andesmovi.ec',
-        cedula: '1004721351',
-        phone: '+593 98 765 4321',
-        password: 'Cliente2026*',
-        role: 'cliente' as const,
-        province: 'Imbabura',
-        canton: 'Ibarra',
-        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
-      },
-      {
-        id: 'usr-driver-carlos',
-        name: 'Carlos Mendoza',
-        email: 'carlos.mendoza@andesmovi.ec',
-        cedula: '0401894562',
-        phone: '+593 99 123 4567',
-        password: 'Conductor2026*',
-        role: 'conductor' as const,
-        province: 'Carchi',
-        canton: 'Tulcán',
-        vehicleModel: 'Chevrolet Sail Sedán',
-        plate: 'PBA-8321',
-        vehicleType: 'auto',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-      },
-    ];
-
-    // Cuentas registradas por los usuarios en la aplicación
-    let dynamicRegisteredAccounts: any[] = [];
-    try {
-      const stored = localStorage.getItem('andesmovi_user_registry');
-      if (stored) {
-        dynamicRegisteredAccounts = JSON.parse(stored);
-      }
-    } catch {}
-
-    const allValidAccounts = [...predefinedAccounts, ...dynamicRegisteredAccounts];
-
-    // Validación estricta: Coincidencia por correo electrónico, cédula de 10 dígitos o número de teléfono
-    const matchedAccount = allValidAccounts.find((acc) => {
-      const aEmail = (acc.email || '').toLowerCase().trim();
-      const aCedula = (acc.cedula || '').replace(/\D/g, '');
-      const aPhone = (acc.phone || '').replace(/\D/g, '');
-
-      const matchesEmail = Boolean(aEmail && aEmail === cleanId);
-      const matchesCedula = Boolean(cleanDigits.length === 10 && aCedula && aCedula === cleanDigits);
-      const matchesPhone = Boolean(cleanDigits.length >= 7 && aPhone && aPhone.includes(cleanDigits));
-
-      return matchesEmail || matchesCedula || matchesPhone;
-    });
+    const authResult = databaseService.authenticateUser(cleanId, loginPassword, loginRoleMode);
 
     // Si el usuario no existe o la contraseña no coincide exactamente: DENEGAR ACCESO
-    if (!matchedAccount || matchedAccount.password !== loginPassword) {
-      setLoginError('Credenciales incorrectas');
+    if (!authResult.success || !authResult.user) {
+      setLoginError('Correo o contraseña incorrectos');
       return;
     }
 
@@ -402,29 +313,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
     setTimeout(() => {
       setIsLoggingIn(false);
-
-      const loggedUser: UserProfile = {
-        id: matchedAccount.id || `usr-${Date.now()}`,
-        name: matchedAccount.name || 'Usuario AndesMovi',
-        email: matchedAccount.email || '',
-        phone: matchedAccount.phone || '',
-        cedula: matchedAccount.cedula || '1724589012',
-        cedulaVerified: true,
-        province: matchedAccount.province || 'Pichincha',
-        canton: matchedAccount.canton || 'Quito',
-        avatar: matchedAccount.avatar || '',
-        authProvider: 'email',
-        role: matchedAccount.role || loginRoleMode || 'cliente',
-        rating: 5.0,
-        totalTripsCompleted: 0,
-        isVerified: true,
-        isRegistrationComplete: true,
-        createdAt: Date.now(),
-        emergencyContacts: [],
-      };
-
-      const sessionResult = processLoginSessionMiddleware(loggedUser);
-      setFeedbackSuccess(`¡Bienvenido, ${loggedUser.name}! Sesión iniciada correctamente.`);
+      const sessionResult = processLoginSessionMiddleware(authResult.user!);
+      setFeedbackSuccess(`¡Bienvenido, ${authResult.user!.name}! Sesión iniciada correctamente.`);
       setTimeout(() => {
         onLoginSuccess(sessionResult.user);
       }, 700);

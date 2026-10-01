@@ -29,14 +29,34 @@ export const ECUADOR_MAJOR_CITIES: Array<{ name: string; province: string; lat: 
   { name: 'Cayambe', province: 'Pichincha', lat: 0.0403, lng: -78.1452 },
 ];
 
+export const TULCAN_CENTRO_DEFAULT = {
+  name: '🏰 Tulcán Centro (Parque Independencia)',
+  canton: 'Tulcán',
+  province: 'Carchi',
+  lat: 0.8122,
+  lng: -77.7175,
+  address: 'Calle Bolívar y 10 de Agosto, Parque Central, Tulcán, Carchi, Ecuador',
+};
+
+export const POPULAR_TULCAN_SECTORS = [
+  { name: '🏰 Tulcán Centro (Parque Independencia)', canton: 'Tulcán', province: 'Carchi', lat: 0.8122, lng: -77.7175, address: 'Parque Central de la Independencia, Calle Bolívar y 10 de Agosto, Tulcán' },
+  { name: '🚌 Terminal Terrestre de Tulcán', canton: 'Tulcán', province: 'Carchi', lat: 0.8119, lng: -77.7173, address: 'Av. Veintimilla y Fray Vacas Galindo, Tulcán' },
+  { name: '🎓 Univ. Politécnica Estatal del Carchi (UPEC)', canton: 'Tulcán', province: 'Carchi', lat: 0.8268, lng: -77.7161, address: 'Campus UPEC, Av. Universitaria y Antisana, Tulcán' },
+  { name: '🏥 Hospital Luis Gabriel Dávila', canton: 'Tulcán', province: 'Carchi', lat: 0.8035, lng: -77.7198, address: 'Av. Veintimilla y Cotopaxi, Tulcán' },
+  { name: '🛒 Mercado Central / Calle Sucre', canton: 'Tulcán', province: 'Carchi', lat: 0.8130, lng: -77.7185, address: 'Calle Sucre y Olmedo, Tulcán Centro' },
+  { name: '🌲 Cementerio Municipal (Azael Gómez)', canton: 'Tulcán', province: 'Carchi', lat: 0.8168, lng: -77.7242, address: 'Av. Cotopaxi y Cementerio, Tulcán' },
+  { name: '🛂 Rumichaca (Puente Internacional)', canton: 'Tulcán', province: 'Carchi', lat: 0.8139, lng: -77.6625, address: 'Puente Internacional Rumichaca, Frontera Ecuador-Colombia' },
+  { name: '🏟️ Estadio Olímpico de Tulcán', canton: 'Tulcán', province: 'Carchi', lat: 0.8145, lng: -77.7125, address: 'Av. Coral y Calle Manabí, Tulcán' },
+];
+
 export const POPULAR_ECUADOR_POINTS = [
+  { name: '🏰 Tulcán Centro', canton: 'Tulcán', province: 'Carchi', lat: 0.8122, lng: -77.7175, address: 'Parque Principal de la Independencia, Tulcán, Carchi' },
   { name: '🏔️ Cayambe', canton: 'Cayambe', province: 'Pichincha', lat: 0.0425, lng: -78.1458, address: 'Parque Central, Cayambe, Pichincha' },
   { name: '🏛️ Quito La Carolina', canton: 'Quito', province: 'Pichincha', lat: -0.1807, lng: -78.4678, address: 'Parque La Carolina / Quicentro, Quito' },
   { name: '🏛️ Quito Quitumbe (Sur)', canton: 'Quito', province: 'Pichincha', lat: -0.2891, lng: -78.5492, address: 'Terminal Quitumbe, Quito Sur' },
   { name: '🌸 Ibarra', canton: 'Ibarra', province: 'Imbabura', lat: 0.3517, lng: -78.1223, address: 'Parque Pedro Moncayo, Ibarra' },
   { name: '🧶 Otavalo', canton: 'Otavalo', province: 'Imbabura', lat: 0.2346, lng: -78.2625, address: 'Plaza de Ponchos, Otavalo' },
   { name: '🌾 Tabacundo', canton: 'Pedro Moncayo', province: 'Pichincha', lat: 0.0469, lng: -78.2192, address: 'Tabacundo, Pedro Moncayo' },
-  { name: '🏰 Tulcán', canton: 'Tulcán', province: 'Carchi', lat: 0.8122, lng: -77.7175, address: 'Parque Principal, Tulcán, Carchi' },
   { name: '⛰️ San Gabriel', canton: 'Montúfar', province: 'Carchi', lat: 0.5956, lng: -77.8306, address: 'San Gabriel, Montúfar, Carchi' },
   { name: '🌊 Guayaquil', canton: 'Guayaquil', province: 'Guayas', lat: -2.1894, lng: -79.8833, address: 'Malecón 2000, Guayaquil' },
   { name: '⛪ Cuenca', canton: 'Cuenca', province: 'Azuay', lat: -2.8974, lng: -79.0044, address: 'Parque Calderón, Cuenca' },
@@ -74,6 +94,54 @@ if (typeof window !== 'undefined' && L && L.DomUtil) {
       }
     } catch {}
   };
+}
+
+export interface SafeTileConfig {
+  url: string;
+  attribution: string;
+  maxZoom: number;
+  subdomains: string[];
+  fallbackUrl: string;
+}
+
+/**
+ * Capa de Mapa Exclusiva en Relieve Andino (Topografía, elevaciones y curvas de nivel)
+ * Utiliza OpenTopoMap como proveedor principal con fallback a ESRI World Topo Map (Relieve de contingencia)
+ * Garantizando visualización de relieve 100% libre sin bloqueos 403 ni pantallas blancas.
+ */
+export function getSafeTileConfig(isDark?: boolean): SafeTileConfig {
+  return {
+    url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+    attribution: 'Topografía y Relieve &copy; OpenStreetMap contributors, SRTM | Estilo: &copy; OpenTopoMap (CC-BY-SA)',
+    maxZoom: 19,
+    subdomains: ['a', 'b', 'c'],
+    fallbackUrl: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+  };
+}
+
+/**
+ * Crea una capa TileLayer de Leaflet tolerante a fallos con soporte retina y conmutación automática de contingencia.
+ */
+export function createSafeTileLayer(config: SafeTileConfig): L.TileLayer {
+  const layer = L.tileLayer(config.url, {
+    maxZoom: config.maxZoom || 19,
+    maxNativeZoom: 17, // OpenTopoMap genera tiles nativos hasta zoom 17; Leaflet los escala fluidamente a 18 y 19 para máxima nitidez urbana
+    attribution: config.attribution,
+    subdomains: config.subdomains,
+    detectRetina: true,
+    crossOrigin: true,
+  });
+
+  let hasSwappedToFallback = false;
+  layer.on('tileerror', () => {
+    if (!hasSwappedToFallback && config.fallbackUrl) {
+      hasSwappedToFallback = true;
+      console.warn('Alerta de mosaico en WebView: Conmutando automáticamente a capa de relieve de respaldo (ESRI World Topo)...');
+      layer.setUrl(config.fallbackUrl);
+    }
+  });
+
+  return layer;
 }
 
 export interface MapComponentProps {
@@ -942,32 +1010,63 @@ export const AndesMoviMap: React.FC<MapComponentProps & MapViewProps> = ({
     let streetName = 'Mi ubicación actual';
     let fullAddress = 'Mi ubicación GPS, Ecuador';
 
+    // Detección y corrección especial de repetidora celular en Julio Andrade (Carchi)
+    // Los proveedores de telefonía móvil en Carchi suelen resolver la IP celular en la antena de Julio Andrade
+    // aunque el usuario esté ubicado físicamente en Tulcán.
+    const isCellTowerJulioAndrade =
+      lat >= 0.70 && lat <= 0.77 && lng <= -77.65 && lng >= -77.78;
+
+    if (isCellTowerJulioAndrade) {
+      lat = TULCAN_CENTRO_DEFAULT.lat;
+      lng = TULCAN_CENTRO_DEFAULT.lng;
+      streetName = TULCAN_CENTRO_DEFAULT.name.replace(/^[^\w\s]+/, '').trim();
+      fullAddress = TULCAN_CENTRO_DEFAULT.address;
+      setLocationNoticeWithTimer('📍 Señal móvil en Carchi: Centrado en Tulcán Centro');
+    }
+
     // 1. Nominatim Reverse Geocode
     try {
-      const nomRes = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`, {
-        headers: { 'Accept-Language': 'es' }
-      });
-      if (nomRes.ok) {
-        const nomData = await nomRes.json();
-        if (nomData && nomData.address) {
-          const road = nomData.address.road || nomData.address.pedestrian || nomData.address.suburb || nomData.address.neighbourhood;
-          const city = nomData.address.city || nomData.address.town || nomData.address.village || nomData.address.county || 'Ecuador';
-          if (road) {
-            streetName = `${road}, ${city}`;
-          } else if (nomData.display_name) {
-            streetName = nomData.display_name.split(',')[0];
+      if (!isCellTowerJulioAndrade) {
+        const nomRes = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`, {
+          headers: { 'Accept-Language': 'es' }
+        });
+        if (nomRes.ok) {
+          const nomData = await nomRes.json();
+          if (nomData && nomData.address) {
+            const displayNameLower = (nomData.display_name || '').toLowerCase();
+            if (displayNameLower.includes('julio andrade')) {
+              lat = TULCAN_CENTRO_DEFAULT.lat;
+              lng = TULCAN_CENTRO_DEFAULT.lng;
+              streetName = TULCAN_CENTRO_DEFAULT.name.replace(/^[^\w\s]+/, '').trim();
+              fullAddress = TULCAN_CENTRO_DEFAULT.address;
+              setLocationNoticeWithTimer('📍 Centrado automáticamente en Tulcán Centro');
+            } else {
+              const road = nomData.address.road || nomData.address.pedestrian || nomData.address.suburb || nomData.address.neighbourhood;
+              let city = nomData.address.city || nomData.address.town || nomData.address.village || nomData.address.county || 'Ecuador';
+              // Si las coordenadas están en el casco urbano de Tulcán (Carchi)
+              if (lat >= 0.78 && lat <= 0.85 && lng >= -77.75 && lng <= -77.66) {
+                city = 'Tulcán';
+              }
+              if (road) {
+                streetName = `${road}, ${city}`;
+              } else if (nomData.display_name) {
+                streetName = nomData.display_name.split(',')[0];
+              }
+              fullAddress = nomData.display_name || `${streetName}, ${city}`;
+            }
           }
-          fullAddress = nomData.display_name || `${streetName}, ${city}`;
         }
       }
     } catch {
       try {
-        const revRes = await fetch(`https://router.project-osrm.org/nearest/v1/driving/${lng},${lat}?number=1`);
-        if (revRes.ok) {
-          const data = await revRes.json();
-          if (data.waypoints && data.waypoints[0] && data.waypoints[0].name) {
-            streetName = data.waypoints[0].name.trim();
-            fullAddress = `${streetName}, Ecuador`;
+        if (!isCellTowerJulioAndrade) {
+          const revRes = await fetch(`https://router.project-osrm.org/nearest/v1/driving/${lng},${lat}?number=1`);
+          if (revRes.ok) {
+            const data = await revRes.json();
+            if (data.waypoints && data.waypoints[0] && data.waypoints[0].name) {
+              streetName = data.waypoints[0].name.trim();
+              fullAddress = `${streetName}, Ecuador`;
+            }
           }
         }
       } catch {}
@@ -1067,12 +1166,10 @@ export const AndesMoviMap: React.FC<MapComponentProps & MapViewProps> = ({
 
   const isDark = effectiveTheme ? effectiveTheme === 'dark' : isDarkMode;
 
-  // Selector de Tipo de Mapa: Estándar, Satélite (alta resolución) y Relieve (curvas de nivel andinas)
-  const [mapType, setMapType] = useState<'standard' | 'satellite' | 'relief'>('standard');
-  const [showLayerMenu, setShowLayerMenu] = useState<boolean>(false);
+  // Capa única y permanente: Mapa en Relieve Andino (topografía, curvas de nivel y elevaciones)
   const activeTileLayerRef = useRef<L.TileLayer | null>(null);
 
-  // Hook dinámico para alternar capas de mapa en tiempo real
+  // Hook dinámico para actualizar la capa de mapa en Relieve
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
@@ -1084,29 +1181,10 @@ export const AndesMoviMap: React.FC<MapComponentProps & MapViewProps> = ({
       activeTileLayerRef.current = null;
     }
 
-    let url = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-    let attribution = '&copy; OpenStreetMap contributors';
-    let maxZoom = 19;
-
-    if (mapType === 'satellite') {
-      url = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-      attribution = 'Imágenes &copy; Esri &mdash; Fuentes: Esri, Maxar, Earthstar Geographics, GIS User Community';
-    } else if (mapType === 'relief') {
-      url = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
-      attribution = 'Topografía &copy; OpenStreetMap contributors, SRTM | Estilo: &copy; OpenTopoMap (CC-BY-SA)';
-      maxZoom = 17;
-    } else {
-      url = isDark
-        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-        : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-      attribution = isDark
-        ? '&copy; OpenStreetMap &copy; CARTO'
-        : '&copy; OpenStreetMap contributors';
-    }
-
-    const newLayer = L.tileLayer(url, { maxZoom, attribution }).addTo(map);
+    const tileConfig = getSafeTileConfig(isDark);
+    const newLayer = createSafeTileLayer(tileConfig).addTo(map);
     activeTileLayerRef.current = newLayer;
-  }, [mapType, isDark]);
+  }, [isDark]);
 
   // Redimensión e invalidación de tamaño automática para Leaflet al cambiar paneles o vistas
   useEffect(() => {
@@ -1120,7 +1198,7 @@ export const AndesMoviMap: React.FC<MapComponentProps & MapViewProps> = ({
       }
     }, 150);
     return () => clearTimeout(timer);
-  }, [isSidePanelVisible, effectiveTheme, isDarkMode, mapType]);
+  }, [isSidePanelVisible, effectiveTheme, isDarkMode]);
 
   const calcularRutaRef = useRef<((oLat: number, oLng: number, dLat: number, dLng: number) => Promise<void>) | null>(null);
   const setPuntoDestinoRef = useRef<((lat: number, lng: number, shouldFitBounds?: boolean) => Promise<void>) | null>(null);
@@ -1194,25 +1272,32 @@ export const AndesMoviMap: React.FC<MapComponentProps & MapViewProps> = ({
       resizeObserver.observe(mapContainerRef.current);
     }
 
-    // Capa base inicial administrada dinámicamente según mapType (Estándar, Satélite, Relieve)
-    let initialUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-    let initialAttribution = '&copy; OpenStreetMap contributors';
-    let initialMaxZoom = 19;
-
-    if (mapType === 'satellite') {
-      initialUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-      initialAttribution = 'Imágenes &copy; Esri';
-    } else if (mapType === 'relief') {
-      initialUrl = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
-      initialAttribution = 'Topografía &copy; OpenTopoMap';
-      initialMaxZoom = 17;
-    }
-
-    const initialLayer = L.tileLayer(initialUrl, {
-      maxZoom: initialMaxZoom,
-      attribution: initialAttribution,
-    }).addTo(map);
+    // Capa base inicial permanente: Relieve Andino (OpenTopoMap con fallback a ESRI World Topo)
+    const initialConfig = getSafeTileConfig(isDark);
+    const initialLayer = createSafeTileLayer(initialConfig).addTo(map);
     activeTileLayerRef.current = initialLayer;
+
+    // Invalidador secuencial de tamaño para WebView de Android (múltiples pasadas tras render inicial)
+    const invalidateTimers = [50, 150, 350, 700, 1200].map((delay) =>
+      setTimeout(() => {
+        if (mapInstanceRef.current) {
+          try {
+            mapInstanceRef.current.invalidateSize({ debounceMoveend: true });
+          } catch {}
+        }
+      }, delay)
+    );
+
+    const handleWindowResizeOrOrientation = () => {
+      if (mapInstanceRef.current) {
+        try {
+          mapInstanceRef.current.invalidateSize({ debounceMoveend: true });
+        } catch {}
+      }
+    };
+    window.addEventListener('resize', handleWindowResizeOrOrientation);
+    window.addEventListener('orientationchange', handleWindowResizeOrOrientation);
+    document.addEventListener('visibilitychange', handleWindowResizeOrOrientation);
 
     if (isAdminMap) {
       // En modo administración / monitoreo de flota GPS:
@@ -1220,15 +1305,19 @@ export const AndesMoviMap: React.FC<MapComponentProps & MapViewProps> = ({
       // Únicamente se sincronizan los vehículos de conductores activos.
       return () => {
         isMounted = false;
+        invalidateTimers.forEach(clearTimeout);
+        window.removeEventListener('resize', handleWindowResizeOrOrientation);
+        window.removeEventListener('orientationchange', handleWindowResizeOrOrientation);
+        document.removeEventListener('visibilitychange', handleWindowResizeOrOrientation);
         if (resizeObserver) resizeObserver.disconnect();
       };
     }
 
-    // 1. Marcador Punto A (Recogida) - Arrastrable para situar recogida en modo cliente
+    // 1. Marcador Punto A (Recogida) - FIJO en la ubicación del usuario (Punto A se queda fijo)
     const originMarker = L.marker(coordsOrigen, {
       icon: createPersonaIcon(origin?.name || 'De akí'),
-      draggable: !isDriverMode,
-      autoPan: !isDriverMode,
+      draggable: false, // Fijo en la ubicación del usuario según requerimiento
+      autoPan: false,
       zIndexOffset: 500,
     }).addTo(map);
     originMarkerRef.current = originMarker;
@@ -1559,43 +1648,12 @@ export const AndesMoviMap: React.FC<MapComponentProps & MapViewProps> = ({
       }
     }, 3000);
 
-    // Eventos de arrastre en el Punto A (Origen / "De akí")
-    originMarker.on('dragstart', (e: any) => {
-      haptic.tap();
-      const el = e.target?.getElement?.();
-      if (el) el.classList.add('marker-dragging');
-      if (activePolylineRef.current) {
-        try {
-          activePolylineRef.current.setStyle({ opacity: 0.25, weight: 3 });
-        } catch {}
-      }
-    });
+    // Punto A (Origen / "De akí") permanece SIEMPRE FIJO en la ubicación del usuario
+    if (originMarkerRef.current && originMarkerRef.current.dragging) {
+      originMarkerRef.current.dragging.disable();
+    }
 
-    originMarker.on('dragend', async (e: any) => {
-      haptic.success();
-      const el = e.target?.getElement?.();
-      if (el) el.classList.remove('marker-dragging');
-      const pos = e.target.getLatLng();
-      const destPos = destMarkerRef.current ? destMarkerRef.current.getLatLng() : L.latLng(coordsDestino);
-      calcularRuta(pos.lat, pos.lng, destPos.lat, destPos.lng);
-
-      const geo = await reverseGeocodeOSRM(pos.lat, pos.lng);
-      updateMarkerLabel(originMarkerRef.current, geo.streetName, true);
-
-      if (onSelectCoordinatesRef.current) {
-        onSelectCoordinatesRef.current(
-          {
-            lat: pos.lat,
-            lng: pos.lng,
-            name: geo.streetName,
-            address: geo.fullAddress,
-          },
-          'origin'
-        );
-      }
-    });
-
-    // Permitir cambiar destino tocando cualquier calle del mapa (Solo si no es modo Conductor)
+    // Permitir seleccionar o cambiar el Punto B (Destino con Bandera 🇪🇨) con un clic o tap en el mapa
     if (!isDriverMode) {
       map.on('click', async (e: L.LeafletMouseEvent) => {
         if (e.originalEvent) {
@@ -1606,41 +1664,9 @@ export const AndesMoviMap: React.FC<MapComponentProps & MapViewProps> = ({
         }
 
         const mode = selectionModeRef.current;
-
-        // Si no está en un modo de selección explícito (el usuario está en el panel pidiendo carrera, encomienda, ejecutivo o delivery),
-        // no alterar destino ni mover la cámara por toques accidentales en el mapa
-        if (!mode) {
-          return;
-        }
-
         haptic.tap();
 
-        if (mode === 'origin') {
-          originMarker.setLatLng(e.latlng);
-          const destPos = destMarkerRef.current ? destMarkerRef.current.getLatLng() : L.latLng(coordsDestino);
-          
-          if (debounceCalcTimeoutRef.current) {
-            clearTimeout(debounceCalcTimeoutRef.current);
-          }
-          debounceCalcTimeoutRef.current = setTimeout(() => {
-            calcularRuta(e.latlng.lat, e.latlng.lng, destPos.lat, destPos.lng);
-          }, 150);
-
-          const geo = await reverseGeocodeOSRM(e.latlng.lat, e.latlng.lng);
-          updateMarkerLabel(originMarkerRef.current, geo.streetName, true);
-
-          if (onSelectCoordinatesRef.current) {
-            onSelectCoordinatesRef.current(
-              {
-                lat: e.latlng.lat,
-                lng: e.latlng.lng,
-                name: geo.streetName,
-                address: geo.fullAddress,
-              },
-              'origin'
-            );
-          }
-        } else if (mode === 'stop') {
+        if (mode === 'stop') {
           const geo = await reverseGeocodeOSRM(e.latlng.lat, e.latlng.lng);
           if (onSelectCoordinatesRef.current) {
             onSelectCoordinatesRef.current(
@@ -1653,8 +1679,9 @@ export const AndesMoviMap: React.FC<MapComponentProps & MapViewProps> = ({
               'stop'
             );
           }
-        } else if (mode === 'destination') {
-          // Solamente en modo explícito 'destination' al tocar el mapa se mueve el Punto B
+        } else {
+          // Requerimiento: El Punto A se queda fijo en la ubicación del usuario.
+          // El Punto B se puede seleccionar directamente con un clic o tap en cualquier lugar del mapa.
           if (setPuntoDestinoRef.current) {
             setPuntoDestinoRef.current(e.latlng.lat, e.latlng.lng, true);
           }
@@ -1707,6 +1734,10 @@ export const AndesMoviMap: React.FC<MapComponentProps & MapViewProps> = ({
     return () => {
       isMounted = false;
       calcularRutaRef.current = null;
+      invalidateTimers.forEach(clearTimeout);
+      window.removeEventListener('resize', handleWindowResizeOrOrientation);
+      window.removeEventListener('orientationchange', handleWindowResizeOrOrientation);
+      document.removeEventListener('visibilitychange', handleWindowResizeOrOrientation);
       clearTimeout(destBounceTimer);
       clearTimeout(resizeTimer);
       if (debounceCalcTimeoutRef.current) {
@@ -1852,17 +1883,16 @@ export const AndesMoviMap: React.FC<MapComponentProps & MapViewProps> = ({
     map.keyboard.enable();
     if ((map as any).tapHold) (map as any).tapHold.enable();
 
+    // Punto A permanece siempre fijo en la ubicación del usuario
+    if (originMarkerRef.current && originMarkerRef.current.dragging) {
+      originMarkerRef.current.dragging.disable();
+    }
+
     if (isDriverMode) {
-      if (originMarkerRef.current && originMarkerRef.current.dragging) {
-        originMarkerRef.current.dragging.disable();
-      }
       if (destMarkerRef.current && destMarkerRef.current.dragging) {
         destMarkerRef.current.dragging.disable();
       }
     } else {
-      if (originMarkerRef.current && originMarkerRef.current.dragging) {
-        originMarkerRef.current.dragging.enable();
-      }
       if (destMarkerRef.current && destMarkerRef.current.dragging) {
         destMarkerRef.current.dragging.enable();
       }
@@ -2291,11 +2321,14 @@ export const AndesMoviMap: React.FC<MapComponentProps & MapViewProps> = ({
               </span>
               <div className="flex flex-col min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-500">Punto A (De akí):</span>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-500">Punto A (Fijo en tu ubicación):</span>
                   <span className="text-[10px] text-zinc-400 font-semibold truncate">Ecuador</span>
                 </div>
                 <span className="text-xs font-bold truncate max-w-[190px] sm:max-w-[240px]">
                   {origin?.name || origin?.address || 'Mi ubicación actual'}
+                </span>
+                <span className="text-[9px] text-blue-500 font-bold flex items-center gap-1 mt-0.5">
+                  🏁 Clic o tap en el mapa para marcar tu Destino (Punto B)
                 </span>
               </div>
             </div>
@@ -2334,6 +2367,27 @@ export const AndesMoviMap: React.FC<MapComponentProps & MapViewProps> = ({
               </button>
             </div>
           </div>
+
+          {/* Aviso especial de detección si marca Julio Andrade pero el usuario está en Tulcán */}
+          {(origin?.name?.toLowerCase().includes('julio andrade') ||
+            origin?.address?.toLowerCase().includes('julio andrade') ||
+            (origin?.lat && origin.lat >= 0.70 && origin.lat <= 0.77 && origin.lng <= -77.65 && origin.lng >= -77.78)) && (
+            <div className="mt-2 p-2.5 rounded-2xl bg-amber-500/20 border border-amber-400/80 text-amber-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-2xl backdrop-blur-xl">
+              <div className="flex items-center gap-2 text-xs font-bold min-w-0">
+                <span className="text-base flex-shrink-0">⚠️</span>
+                <span className="leading-tight">¿Estás en Tulcán y te marca en Julio Andrade?</span>
+              </div>
+              <button
+                type="button"
+                id="btn-fix-tulcan-centro-banner"
+                onClick={() => handleSelectCityOrCanton(TULCAN_CENTRO_DEFAULT)}
+                className="w-full sm:w-auto px-3 py-1.5 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-black text-xs font-black tracking-wider uppercase transition-all active:scale-95 cursor-pointer shadow flex items-center justify-center gap-1.5 flex-shrink-0"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Fijar Tulcán Centro</span>
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -2377,6 +2431,22 @@ export const AndesMoviMap: React.FC<MapComponentProps & MapViewProps> = ({
 
             {/* Contenido con Scroll */}
             <div className="flex-1 overflow-y-auto pt-4 space-y-4 pr-1 scrollbar-thin">
+              {/* Botón Destacado: Tulcán Centro Inmediato */}
+              <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-500/15 to-teal-500/15 border-2 border-emerald-500/40 flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <span className="text-xs font-black block text-emerald-400">¿Estás en Tulcán?</span>
+                  <span className="text-[11px] text-zinc-400 block truncate">Fijar en Parque de la Independencia / Casco Central</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleSelectCityOrCanton(TULCAN_CENTRO_DEFAULT)}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black transition-all active:scale-95 cursor-pointer shadow flex items-center gap-1 flex-shrink-0"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Tulcán Centro</span>
+                </button>
+              </div>
+
               {/* Botón Destacado: Forzar GPS de Alta Precisión */}
               <button
                 type="button"
@@ -2386,13 +2456,44 @@ export const AndesMoviMap: React.FC<MapComponentProps & MapViewProps> = ({
                   isLocatingUser
                     ? 'bg-emerald-500 text-black animate-pulse'
                     : isDark
-                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400/50 hover:brightness-110'
-                    : 'bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-500'
+                    ? 'bg-zinc-900 hover:bg-zinc-850 text-zinc-200 border-zinc-800 hover:border-emerald-500/50'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'
                 }`}
               >
                 <Crosshair className={`w-4 h-4 ${isLocatingUser ? 'animate-spin' : ''}`} />
-                <span>{isLocatingUser ? 'Detectando señal de satélite...' : '🛰️ Detectar mi ubicación real con GPS satelital'}</span>
+                <span>{isLocatingUser ? 'Detectando señal de satélite...' : '🛰️ Reintentar GPS Satelital de alta precisión'}</span>
               </button>
+
+              {/* Sectores de Tulcán */}
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 block mb-2">
+                  🏰 Sectores de Tulcán (Carchi):
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                  {POPULAR_TULCAN_SECTORS.map((sec, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleSelectCityOrCanton(sec)}
+                      className={`p-2.5 rounded-xl border text-left transition-all active:scale-95 cursor-pointer flex items-center justify-between group ${
+                        isDark
+                          ? 'bg-zinc-900/60 hover:bg-zinc-850 border-zinc-800/80 hover:border-emerald-500/40 text-zinc-200'
+                          : 'bg-slate-50 hover:bg-emerald-50/60 border-slate-200 hover:border-emerald-400 text-slate-800'
+                      }`}
+                    >
+                      <div className="min-w-0 pr-1">
+                        <span className="text-xs font-bold block truncate group-hover:text-emerald-400">
+                          {sec.name}
+                        </span>
+                        <span className="text-[10px] text-zinc-400 block truncate">
+                          {sec.address}
+                        </span>
+                      </div>
+                      <ChevronDown className="w-3.5 h-3.5 -rotate-90 text-zinc-400 flex-shrink-0" />
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               {/* Buscador de Ciudad / Cantón */}
               <div className="relative">
@@ -2419,10 +2520,10 @@ export const AndesMoviMap: React.FC<MapComponentProps & MapViewProps> = ({
                 )}
               </div>
 
-              {/* Cuadrícula de Ciudades Populares */}
+              {/* Cuadrícula de Otras Ciudades Populares */}
               <div>
                 <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block mb-2">
-                  Ciudades y Cantones Rápidos:
+                  Otras Ciudades y Cantones de Ecuador:
                 </span>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {POPULAR_ECUADOR_POINTS
@@ -2934,99 +3035,24 @@ export const AndesMoviMap: React.FC<MapComponentProps & MapViewProps> = ({
         </button>
       )}
 
-      {/* Menú Flotante de Selección de Tipo de Mapa: Satélite, Relieve, Estándar (Esencial para zonas rurales andinas) */}
+      {/* Indicador de Capa Exclusiva en Relieve Andino */}
       <div
-        className={`absolute z-[1000] flex flex-col items-end gap-1.5 pointer-events-auto transition-all ${
+        className={`absolute z-[1000] flex items-center gap-1.5 pointer-events-none transition-all ${
           isDriverMode ? 'top-14 right-3' : 'top-3 right-3'
         }`}
       >
-        <button
-          type="button"
-          id="btn-map-layer-selector"
-          onClick={() => {
-            haptic.tap();
-            setShowLayerMenu((prev) => !prev);
-          }}
-          className={`px-3 py-2 rounded-2xl flex items-center gap-1.5 shadow-xl border backdrop-blur-md transition-all active:scale-95 cursor-pointer font-bold text-xs ${
+        <div
+          className={`px-3 py-1.5 rounded-2xl flex items-center gap-1.5 shadow-xl border backdrop-blur-md font-bold text-xs ${
             isDark
-              ? 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-100 border-zinc-700/80 shadow-black/40'
-              : 'bg-white/95 hover:bg-slate-100 text-slate-800 border-slate-300 shadow-slate-900/10'
+              ? 'bg-zinc-900/90 text-zinc-100 border-zinc-700/80 shadow-black/40'
+              : 'bg-white/95 text-slate-800 border-slate-300 shadow-slate-900/10'
           }`}
-          title="Cambiar tipo de mapa (Satélite, Relieve, Estándar)"
-          aria-label="Cambiar tipo de mapa"
         >
-          <Layers className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-          <span className="text-[11px] font-black uppercase tracking-wider">
-            {mapType === 'satellite' ? 'Satélite 🛰️' : mapType === 'relief' ? 'Relieve 🏔️' : 'Estándar 🗺️'}
+          <Layers className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+          <span className="text-[11px] font-black uppercase tracking-wider text-emerald-500">
+            Relieve Andino 🏔️
           </span>
-        </button>
-
-        {showLayerMenu && (
-          <div
-            className={`p-2 rounded-2xl border shadow-2xl flex flex-col gap-1 animate-in fade-in slide-in-from-top-2 duration-150 backdrop-blur-md min-w-[155px] ${
-              isDark
-                ? 'bg-zinc-950/95 border-zinc-800 text-zinc-100 shadow-black/80'
-                : 'bg-white/95 border-slate-300 text-slate-900 shadow-xl'
-            }`}
-          >
-            <div className={`px-2 py-1 text-[9px] font-black uppercase tracking-wider border-b ${
-              isDark ? 'text-zinc-400 border-zinc-800' : 'text-slate-500 border-slate-200'
-            }`}>
-              Capa Geográfica Andina
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                haptic.tap();
-                setMapType('standard');
-                setShowLayerMenu(false);
-              }}
-              className={`px-2.5 py-1.5 rounded-xl text-left text-xs font-bold transition-all cursor-pointer flex items-center justify-between gap-2 ${
-                mapType === 'standard'
-                  ? 'bg-emerald-500 text-zinc-950 font-black shadow-sm'
-                  : isDark ? 'hover:bg-zinc-900 text-zinc-300' : 'hover:bg-slate-100 text-slate-700'
-              }`}
-            >
-              <span>🗺️ Estándar</span>
-              {mapType === 'standard' && <span className="text-[11px]">✓</span>}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                haptic.tap();
-                setMapType('satellite');
-                setShowLayerMenu(false);
-              }}
-              className={`px-2.5 py-1.5 rounded-xl text-left text-xs font-bold transition-all cursor-pointer flex items-center justify-between gap-2 ${
-                mapType === 'satellite'
-                  ? 'bg-emerald-500 text-zinc-950 font-black shadow-sm'
-                  : isDark ? 'hover:bg-zinc-900 text-zinc-300' : 'hover:bg-slate-100 text-slate-700'
-              }`}
-            >
-              <span>🛰️ Satélite HD</span>
-              {mapType === 'satellite' && <span className="text-[11px]">✓</span>}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                haptic.tap();
-                setMapType('relief');
-                setShowLayerMenu(false);
-              }}
-              className={`px-2.5 py-1.5 rounded-xl text-left text-xs font-bold transition-all cursor-pointer flex items-center justify-between gap-2 ${
-                mapType === 'relief'
-                  ? 'bg-emerald-500 text-zinc-950 font-black shadow-sm'
-                  : isDark ? 'hover:bg-zinc-900 text-zinc-300' : 'hover:bg-slate-100 text-slate-700'
-              }`}
-            >
-              <span>🏔️ Relieve Andino</span>
-              {mapType === 'relief' && <span className="text-[11px]">✓</span>}
-            </button>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );

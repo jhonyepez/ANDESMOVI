@@ -22,10 +22,10 @@ import {
 } from '../types';
 
 export const DEFAULT_COORDS: Coordinates = {
-  lat: 0.8116,
-  lng: -77.7173,
-  address: 'Tulcán, Carchi, Ecuador',
-  name: 'Carchi - Tulcán (Punto de Inicio)',
+  lat: 0.8122,
+  lng: -77.7175,
+  name: 'Tulcán Centro (Parque Independencia)',
+  address: 'Calle Bolívar y 10 de Agosto, Tulcán Centro, Carchi, Ecuador',
 };
 
 export {

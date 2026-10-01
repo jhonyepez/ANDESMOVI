@@ -22,41 +22,44 @@ class _AndesMoviClientMapViewState extends State<AndesMoviClientMapView> {
   final MapController _mapController = MapController();
 
   // Ubicación dinámica de recogida (Punto A) y destino (Punto B)
-  LatLng _pickupLocation = const LatLng(0.0425, -78.1458); // Cayambe por defecto
-  LatLng _dropoffLocation = const LatLng(0.0495, -78.1400);
-  LatLng _driverPosition = const LatLng(0.0390, -78.1470);
+  LatLng _pickupLocation = const LatLng(0.8122, -77.7175); // Tulcán Centro por defecto
+  LatLng _dropoffLocation = const LatLng(0.8195, -77.7130);
+  LatLng _driverPosition = const LatLng(0.8085, -77.7180);
   double _driverHeading = 45.0;
 
-  String _currentCityName = 'Cayambe';
+  String _currentCityName = 'Tulcán Centro';
   String _selectedService = 'viaje';
   double _offeredFareUsd = 2.50;
   bool _isNightMode = false;
 
   static const String _osmDayTileUrl =
-      'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+      'https://a.tile.opentopomap.org/{z}/{x}/{y}.png';
   static const String _osmNightTileUrl =
-      'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png';
+      'https://a.tile.opentopomap.org/{z}/{x}/{y}.png';
 
   Timer? _driverTimer;
   int _step = 0;
 
   List<LatLng> _simulatedDriverRoute = [
-    const LatLng(0.0390, -78.1470),
-    const LatLng(0.0400, -78.1465),
-    const LatLng(0.0410, -78.1460),
-    const LatLng(0.0420, -78.1459),
-    const LatLng(0.0425, -78.1458),
+    const LatLng(0.8085, -77.7180),
+    const LatLng(0.8095, -77.7178),
+    const LatLng(0.8105, -77.7176),
+    const LatLng(0.8115, -77.7175),
+    const LatLng(0.8122, -77.7175),
   ];
 
   final List<Map<String, dynamic>> _ecuadorCities = const [
-    {'name': '🏔️ Cayambe', 'lat': 0.0425, 'lng': -78.1458},
-    {'name': '🏛️ Quito Norte', 'lat': -0.1807, 'lng': -78.4678},
-    {'name': '🏛️ Quito Sur', 'lat': -0.2891, 'lng': -78.5492},
+    {'name': '🏰 Tulcán Centro', 'lat': 0.8122, 'lng': -77.7175},
+    {'name': '🚌 Terminal Tulcán', 'lat': 0.8119, 'lng': -77.7173},
+    {'name': '🎓 UPEC Tulcán', 'lat': 0.8268, 'lng': -77.7161},
+    {'name': '🏥 Hosp. Tulcán', 'lat': 0.8035, 'lng': -77.7198},
+    {'name': '⛰️ San Gabriel', 'lat': 0.5956, 'lng': -77.8306},
     {'name': '🌸 Ibarra', 'lat': 0.3517, 'lng': -78.1223},
     {'name': '🧶 Otavalo', 'lat': 0.2346, 'lng': -78.2625},
+    {'name': '🏔️ Cayambe', 'lat': 0.0425, 'lng': -78.1458},
     {'name': '🌾 Tabacundo', 'lat': 0.0469, 'lng': -78.2192},
-    {'name': '🏰 Tulcán', 'lat': 0.8122, 'lng': -77.7175},
-    {'name': '⛰️ San Gabriel', 'lat': 0.5956, 'lng': -77.8306},
+    {'name': '🏛️ Quito Norte', 'lat': -0.1807, 'lng': -78.4678},
+    {'name': '🏛️ Quito Sur', 'lat': -0.2891, 'lng': -78.5492},
     {'name': '🌊 Guayaquil', 'lat': -2.1894, 'lng': -79.8833},
     {'name': '⛪ Cuenca', 'lat': -2.8974, 'lng': -79.0044},
     {'name': '🌺 Ambato', 'lat': -1.2491, 'lng': -78.6168},
@@ -161,15 +164,15 @@ class _AndesMoviClientMapViewState extends State<AndesMoviClientMapView> {
               minZoom: 5.0,
               onTap: (tapPosition, point) {
                 setState(() {
-                  _pickupLocation = point;
-                  _dropoffLocation = LatLng(point.latitude + 0.007, point.longitude + 0.005);
-                  _generateRouteFromCenter(point);
+                  // Punto A (_pickupLocation) se mantiene FIJO en la ubicación del usuario
+                  // Punto B (_dropoffLocation) se selecciona con un clic o tap en el mapa
+                  _dropoffLocation = point;
                 });
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Punto de recogida actualizado en el mapa'),
+                    content: Text('Punto B (Destino) fijado con tap en el mapa 🏁'),
                     duration: Duration(milliseconds: 1500),
-                    backgroundColor: Color(0xFF10B981),
+                    backgroundColor: Color(0xFF0052FF),
                   ),
                 );
               },
