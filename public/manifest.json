@@ -1,0 +1,41 @@
+{
+  "name": "ANDESMOVI Ecuador",
+  "short_name": "AndesMovi",
+  "description": "Tu confianza, tu seguridad, nuestro compromiso. Plataforma ecuatoriana de carreras seguras, entregas y encomiendas.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#052e16",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Pedir Carrera",
+      "url": "/?service=viaje",
+      "description": "Pide una carrera segura inmediata"
+    },
+    {
+      "name": "Enviar Encomienda",
+      "url": "/?service=encomienda",
+      "description": "Rastrea y envía paquetes interprovinciales"
+    }
+  ]
+}

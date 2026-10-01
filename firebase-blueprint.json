@@ -1,0 +1,94 @@
+{
+  "entities": {
+    "Trip": {
+      "title": "Trip",
+      "description": "Active or completed ride/delivery/interprovincial trip",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "tripCode": { "type": "string", "maxLength": 64 },
+        "serviceType": { "type": "string", "maxLength": 32 },
+        "passengerName": { "type": "string", "maxLength": 128 },
+        "passengerPhone": { "type": "string", "maxLength": 32 },
+        "originAddress": { "type": "string", "maxLength": 256 },
+        "destinationAddress": { "type": "string", "maxLength": 256 },
+        "distanceKm": { "type": "number" },
+        "durationMinutes": { "type": "number" },
+        "status": { "type": "string", "maxLength": 32 },
+        "paymentMethod": { "type": "string", "maxLength": 32 },
+        "paymentStatus": { "type": "string", "maxLength": 32 },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "serviceType", "passengerName", "status"]
+    },
+    "VehicleUnit": {
+      "title": "VehicleUnit",
+      "description": "Registered vehicle unit in AndesMovi fleet",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "unitNumber": { "type": "string", "maxLength": 32 },
+        "plate": { "type": "string", "maxLength": 32 },
+        "model": { "type": "string", "maxLength": 64 },
+        "year": { "type": "number" },
+        "color": { "type": "string", "maxLength": 32 },
+        "vehicleType": { "type": "string", "maxLength": 32 },
+        "cooperativa": { "type": "string", "maxLength": 128 },
+        "assignedDriverName": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["id", "plate", "model", "vehicleType"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Registered user profile",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 128 },
+        "phone": { "type": "string", "maxLength": 32 },
+        "cedula": { "type": "string", "maxLength": 32 },
+        "role": { "type": "string", "maxLength": 32 }
+      },
+      "required": ["id"]
+    },
+    "ExecutiveTripFrequency": {
+      "title": "ExecutiveTripFrequency",
+      "description": "National executive interprovincial trip route and schedule frequency",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "code": { "type": "string", "maxLength": 64 },
+        "originCity": { "type": "string", "maxLength": 128 },
+        "originTerminal": { "type": "string", "maxLength": 256 },
+        "destinationCity": { "type": "string", "maxLength": 128 },
+        "destinationTerminal": { "type": "string", "maxLength": 256 },
+        "departureTime": { "type": "string", "maxLength": 64 },
+        "pricePerSeatUsd": { "type": "number" },
+        "depositRequiredUsd": { "type": "number" },
+        "availableSeats": { "type": "number" },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "originCity", "destinationCity", "pricePerSeatUsd"]
+    }
+  },
+  "firestore": {
+    "/trips/{tripId}": {
+      "schema": "Trip",
+      "description": "Trips collection"
+    },
+    "/units/{unitId}": {
+      "schema": "VehicleUnit",
+      "description": "Vehicle units collection"
+    },
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Users collection"
+    },
+    "/executive_frequencies/{freqId}": {
+      "schema": "ExecutiveTripFrequency",
+      "description": "National executive interprovincial trip frequencies"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "ANDESMOVI",
+  "description": "Tu confianza, tu seguridad, nuestro compromiso. Plataforma totalmente ecuatoriana de carreras seguras, paquetes y encomiendas inspirada en el Volcán CHILES .",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

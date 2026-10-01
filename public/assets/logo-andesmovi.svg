@@ -1,0 +1,295 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <!-- Keyframe Animations for Cinematic 3D Loop -->
+    <style>
+      /* 1. Levitation of the entire 3D badge */
+      @keyframes badgeLevitate {
+        0%, 100% { transform: translateY(0px) rotateX(0deg); }
+        50% { transform: translateY(-14px) rotateX(1.5deg); }
+      }
+      .levitating-badge {
+        animation: badgeLevitate 4.5s ease-in-out infinite;
+        transform-origin: 250px 250px;
+      }
+
+      /* 2. Light Reflections sweeping across Gold & Crystal Ice */
+      @keyframes sweepReflections {
+        0% { transform: translateX(-220px) rotate(30deg); opacity: 0; }
+        15% { opacity: 0.95; }
+        85% { opacity: 0.95; }
+        100% { transform: translateX(380px) rotate(30deg); opacity: 0; }
+      }
+      .reflection-sweep {
+        animation: sweepReflections 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      }
+
+      /* 3. Golden Ring Pulse & Radial Flare */
+      @keyframes ringGlowPulse {
+        0%, 100% { filter: drop-shadow(0 0 16px rgba(245, 158, 11, 0.5)) drop-shadow(0 0 30px rgba(251, 191, 36, 0.3)); }
+        50% { filter: drop-shadow(0 0 28px rgba(251, 191, 36, 0.85)) drop-shadow(0 0 50px rgba(245, 158, 11, 0.6)); }
+      }
+      .golden-ring-glow {
+        animation: ringGlowPulse 3s ease-in-out infinite;
+      }
+
+      /* 4. Headlight Pulse & Laser Rays */
+      @keyframes headlightSoftPulse {
+        0%, 100% { opacity: 0.6; filter: drop-shadow(0 0 8px #fef08a); }
+        50% { opacity: 1; filter: drop-shadow(0 0 20px #38bdf8); }
+      }
+      .headlight-pulse {
+        animation: headlightSoftPulse 2s ease-in-out infinite;
+      }
+
+      /* 5. Snow Peak Specular Glint & Flare */
+      @keyframes snowShimmer {
+        0%, 75%, 100% { opacity: 0.4; transform: scale(1); }
+        88% { opacity: 1; filter: drop-shadow(0 0 14px #ffffff); transform: scale(1.3); }
+      }
+      .snow-peak-glint {
+        animation: snowShimmer 3.5s ease-in-out infinite;
+        transform-origin: 250px 75px;
+      }
+
+      /* 6. Ring Rotation Particle Sweep */
+      @keyframes goldRotateSweep {
+        0% { stroke-dashoffset: 700; }
+        100% { stroke-dashoffset: -700; }
+      }
+      .ring-rotate-sweep {
+        stroke-dasharray: 140 560;
+        animation: goldRotateSweep 5s linear infinite;
+      }
+
+      /* 7. Floating Light Sparks */
+      @keyframes floatSpark1 {
+        0%, 100% { transform: translate(0, 0) scale(0.8); opacity: 0.3; }
+        50% { transform: translate(-15px, -20px) scale(1.2); opacity: 0.9; }
+      }
+      @keyframes floatSpark2 {
+        0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+        50% { transform: translate(18px, -25px) scale(1.4); opacity: 1; }
+      }
+      .spark-1 { animation: floatSpark1 3.2s ease-in-out infinite; }
+      .spark-2 { animation: floatSpark2 4.1s ease-in-out infinite; }
+    </style>
+
+    <!-- Drop Shadows and Glow Filters -->
+    <filter id="badgeShadow3D" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="24" stdDeviation="30" flood-color="#000000" flood-opacity="0.9"/>
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#d97706" flood-opacity="0.4"/>
+      <feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#0284c7" flood-opacity="0.3"/>
+    </filter>
+
+    <filter id="headlightGlowFilter" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+
+    <!-- Metallic Gold Ribbon Gradients -->
+    <linearGradient id="goldRibbonOuter" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fffbeb"/>
+      <stop offset="15%" stop-color="#fef08a"/>
+      <stop offset="35%" stop-color="#f59e0b"/>
+      <stop offset="55%" stop-color="#b45309"/>
+      <stop offset="75%" stop-color="#fcd34d"/>
+      <stop offset="90%" stop-color="#d97706"/>
+      <stop offset="100%" stop-color="#78350f"/>
+    </linearGradient>
+
+    <linearGradient id="goldRibbonInner" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#451a03"/>
+      <stop offset="25%" stop-color="#92400e"/>
+      <stop offset="50%" stop-color="#fef3c7"/>
+      <stop offset="75%" stop-color="#d97706"/>
+      <stop offset="100%" stop-color="#78350f"/>
+    </linearGradient>
+
+    <linearGradient id="goldHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="50%" stop-color="#fef3c7" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.95"/>
+    </linearGradient>
+
+    <!-- Volcanic Crystal Dark Ice Mountain Gradients -->
+    <linearGradient id="crystalFacetDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#091322"/>
+      <stop offset="35%" stop-color="#0284c7"/>
+      <stop offset="70%" stop-color="#0369a1"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+
+    <linearGradient id="crystalFacetLight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e0f2fe"/>
+      <stop offset="30%" stop-color="#38bdf8"/>
+      <stop offset="75%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#0c4a6e"/>
+    </linearGradient>
+
+    <!-- Pure White Snow Cap Gradient -->
+    <linearGradient id="snowPeakGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="60%" stop-color="#f0f9ff"/>
+      <stop offset="100%" stop-color="#bae6fd"/>
+    </linearGradient>
+
+    <!-- Executive Vehicle Metallic Orange/Gold Body Gradient -->
+    <linearGradient id="taxiBodyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#78350f"/>
+      <stop offset="25%" stop-color="#d97706"/>
+      <stop offset="50%" stop-color="#fef08a"/>
+      <stop offset="75%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#451a03"/>
+    </linearGradient>
+
+    <!-- Yamaha Sport Bike Metallic Cyan/Dark Body Gradient -->
+    <linearGradient id="yamahaBodyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="30%" stop-color="#0284c7"/>
+      <stop offset="65%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+
+    <!-- Parcel Box Gradients -->
+    <linearGradient id="parcelGoldTop" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+
+    <radialGradient id="backdropGlow" cx="50%" cy="45%" r="65%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.35"/>
+      <stop offset="40%" stop-color="#0284c7" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+
+    <clipPath id="mountainClip">
+      <polygon points="250,65 125,335 375,335"/>
+    </clipPath>
+  </defs>
+
+  <!-- Ambient Backdrop Glow -->
+  <circle cx="250" cy="235" r="235" fill="url(#backdropGlow)" />
+
+  <!-- LEVITATING BADGE GROUP -->
+  <g class="levitating-badge" filter="url(#badgeShadow3D)">
+
+    <!-- BACK HALF OF GOLDEN RIBBON (Passing behind Mountain) -->
+    <g class="golden-ring-glow">
+      <ellipse cx="250" cy="315" rx="195" ry="65" fill="none" stroke="url(#goldRibbonInner)" stroke-width="28"/>
+      <ellipse cx="250" cy="315" rx="195" ry="65" fill="none" stroke="url(#goldRibbonOuter)" stroke-width="22"/>
+    </g>
+
+    <!-- DARK CRYSTAL ICE MOUNTAIN PEAK (Volcán Cayembe) -->
+    <g id="dark-crystal-mountain">
+      <!-- Shadow Base -->
+      <polygon points="250,65 120,335 380,335" fill="#020617"/>
+
+      <!-- Translucent Crystal Facets -->
+      <polygon points="250,65 175,185 120,335 205,330" fill="url(#crystalFacetDark)"/>
+      <polygon points="250,65 195,145 175,185" fill="url(#crystalFacetLight)" opacity="0.85"/>
+
+      <!-- Center Main Ridge Facet -->
+      <polygon points="250,65 215,185 250,335 205,330 175,185" fill="url(#crystalFacetLight)" opacity="0.95"/>
+      <polygon points="250,65 260,165 215,185" fill="#ffffff" opacity="0.95"/>
+
+      <!-- Right Main Facet -->
+      <polygon points="250,65 295,175 380,335 250,335 215,185" fill="url(#crystalFacetDark)"/>
+      <polygon points="250,65 305,135 295,175" fill="url(#crystalFacetLight)" opacity="0.9"/>
+
+      <!-- Right Outer Facet -->
+      <polygon points="295,175 380,335 325,285" fill="url(#crystalFacetDark)" opacity="0.7"/>
+
+      <!-- Sharp Specular Ridge Lines -->
+      <line x1="250" y1="65" x2="215" y2="185" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.95"/>
+      <line x1="215" y1="185" x2="250" y2="335" stroke="#bae6fd" stroke-width="2.5" opacity="0.85"/>
+      <line x1="250" y1="65" x2="295" y2="175" stroke="#ffffff" stroke-width="2.5" opacity="0.9"/>
+
+      <!-- Light Reflection Sweep across Mountain -->
+      <g clip-path="url(#mountainClip)">
+        <rect x="0" y="40" width="45" height="320" fill="#ffffff" opacity="0.35" class="reflection-sweep" />
+      </g>
+    </g>
+
+    <!-- SNOW-CAPPED PEAK -->
+    <g id="snow-cap">
+      <path d="M 250 65 
+               C 238 88, 226 110, 215 128 
+               C 222 133, 232 122, 240 133 
+               C 248 143, 254 152, 262 145 
+               C 270 138, 278 148, 284 139 
+               C 288 128, 278 105, 285 92 
+               Z" 
+            fill="url(#snowPeakGrad)" 
+            stroke="#ffffff" 
+            stroke-width="2"/>
+
+      <circle cx="250" cy="68" r="5" fill="#ffffff" class="snow-peak-glint"/>
+    </g>
+
+    <!-- FRONT HALF OF GOLDEN METALLIC RIBBON LOOP -->
+    <g class="golden-ring-glow">
+      <!-- Main Outer Ribbon Path -->
+      <path d="M 55 315 A 195 65 0 0 0 445 315" fill="none" stroke="url(#goldRibbonOuter)" stroke-width="28" stroke-linecap="round"/>
+      <path d="M 55 315 A 195 65 0 0 0 445 315" fill="none" stroke="url(#goldRibbonInner)" stroke-width="18" stroke-linecap="round"/>
+
+      <!-- Specular Highlight Bevel Lines -->
+      <path d="M 60 308 A 190 60 0 0 0 440 308" fill="none" stroke="url(#goldHighlight)" stroke-width="3.5" stroke-linecap="round"/>
+
+      <!-- Dynamic Light Sweep -->
+      <path d="M 55 315 A 195 65 0 0 0 445 315" fill="none" stroke="#fef08a" stroke-width="7" stroke-linecap="round" class="ring-rotate-sweep" opacity="0.95"/>
+    </g>
+
+    <!-- 1. EXECUTIVE TAXI SEDAN (Left on Ring) -->
+    <g id="executive-taxi-sedan" transform="translate(95, 282) scale(0.88)">
+      <ellipse cx="42" cy="36" rx="38" ry="11" fill="#000000" opacity="0.8"/>
+      <!-- Metallic Orange Body -->
+      <path d="M 2 28 C 4 19, 12 15, 22 14 L 34 13 C 42 7, 54 3, 68 3 L 80 3 C 88 3, 94 7, 98 13 L 105 15 C 111 17, 115 21, 115 28 L 2 28 Z" fill="url(#taxiBodyGrad)" stroke="#fef08a" stroke-width="1.5"/>
+      <!-- Windows -->
+      <path d="M 38 13 L 64 6 L 64 13 Z" fill="#e0f2fe" opacity="0.95"/>
+      <path d="M 68 6 L 80 6 C 85 6, 90 9, 93 13 L 68 13 Z" fill="#e0f2fe" opacity="0.95"/>
+      <!-- Taxi Sign on Roof -->
+      <rect x="52" y="0" width="16" height="4" rx="1.5" fill="#fef08a" stroke="#78350f" stroke-width="0.8"/>
+      <!-- Wheels with Gold Rims -->
+      <circle cx="26" cy="28" r="8.5" fill="#0f172a" stroke="#fbbf24" stroke-width="2"/>
+      <circle cx="26" cy="28" r="4" fill="#ffffff"/>
+      <circle cx="90" cy="28" r="8.5" fill="#0f172a" stroke="#fbbf24" stroke-width="2"/>
+      <circle cx="90" cy="28" r="4" fill="#ffffff"/>
+      <!-- Glowing Headlights Beam -->
+      <path d="M 112 18 L 148 10 L 148 28 L 112 23 Z" fill="url(#backdropGlow)" class="headlight-pulse" filter="url(#headlightGlowFilter)"/>
+      <ellipse cx="114" cy="19" rx="4" ry="2.5" fill="#ffffff" class="headlight-pulse"/>
+    </g>
+
+    <!-- 2. DELIVERY PARCEL BOX (Center on Ring) -->
+    <g id="parcel-box" transform="translate(225, 292) scale(1.15)">
+      <ellipse cx="20" cy="38" rx="24" ry="8" fill="#000000" opacity="0.7"/>
+      <polygon points="20,0 40,10 20,20 0,10" fill="url(#parcelGoldTop)" stroke="#78350f" stroke-width="1"/>
+      <polygon points="12,6 20,2 28,6 20,10" fill="#ffffff" opacity="0.95"/>
+      <polygon points="0,10 20,20 20,40 0,30" fill="#b45309" stroke="#78350f" stroke-width="1"/>
+      <polygon points="20,20 40,10 40,30 20,40" fill="#78350f" stroke="#451a03" stroke-width="1"/>
+      <line x1="20" y1="20" x2="20" y2="40" stroke="#fef08a" stroke-width="2.5" opacity="0.95"/>
+      <rect x="24" y="18" width="10" height="7" rx="1" fill="#ffffff"/>
+    </g>
+
+    <!-- 3. SPORT MOTORCYCLE (Right on Ring) -->
+    <g id="sport-motorcycle" transform="translate(310, 278) scale(0.88)">
+      <ellipse cx="40" cy="38" rx="36" ry="10" fill="#000000" opacity="0.8"/>
+      <path d="M 8 26 L 24 16 L 42 12 L 58 12 L 72 20 L 78 28 L 8 28 Z" fill="url(#yamahaBodyGrad)" stroke="#38bdf8" stroke-width="1.5"/>
+      <path d="M 28 14 C 34 10, 48 10, 52 14 L 46 22 L 32 22 Z" fill="#0284c7"/>
+      <path d="M 52 12 L 64 4 L 70 12 Z" fill="#e0f2fe" opacity="0.95"/>
+      <!-- Wheels with Cyan Rims -->
+      <circle cx="20" cy="28" r="9.5" fill="#09090b" stroke="#38bdf8" stroke-width="2.2"/>
+      <circle cx="20" cy="28" r="4" fill="#ffffff"/>
+      <circle cx="68" cy="28" r="9.5" fill="#09090b" stroke="#38bdf8" stroke-width="2.2"/>
+      <circle cx="68" cy="28" r="4" fill="#ffffff"/>
+      <!-- Headlight Beam -->
+      <path d="M 74 16 L 112 8 L 112 26 L 74 20 Z" fill="url(#backdropGlow)" class="headlight-pulse" filter="url(#headlightGlowFilter)"/>
+      <ellipse cx="76" cy="18" rx="3.5" ry="2.2" fill="#ffffff" class="headlight-pulse"/>
+    </g>
+
+    <!-- FLOATING LIGHT SPARKS -->
+    <circle cx="110" cy="180" r="3" fill="#fef08a" class="spark-1"/>
+    <circle cx="380" cy="210" r="2.5" fill="#38bdf8" class="spark-2"/>
+    <circle cx="250" cy="50" r="3.5" fill="#ffffff" class="spark-1"/>
+
+  </g>
+</svg>

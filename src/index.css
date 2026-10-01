@@ -1,0 +1,902 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #print-section, #print-section * {
+    visibility: visible;
+  }
+  #print-section {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}
+
+/* Leaflet map container custom styling - 100% full compatibility and prevents map shrinking or collapsing */
+#map,
+#map-container,
+.leaflet-container,
+.leaflet-pane,
+.leaflet-tile-container,
+.leaflet-tile-pane,
+.leaflet-marker-pane,
+.leaflet-overlay-pane {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 400px !important;
+  min-width: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  background-color: transparent !important;
+  font-family: inherit;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
+  -webkit-tap-highlight-color: transparent !important; /* Quita el destello/pantallazo al pulsar */
+  -webkit-touch-callout: none !important;            /* Evita menús contextuales de imágenes */
+  -webkit-user-select: none !important;              /* Evita que se seleccione el mapa */
+  user-select: none !important;
+  outline: none !important;
+  touch-action: pan-x pan-y !important;             /* Permite arrastre y zoom fluido sin gestos del navegador */
+  position: absolute !important;
+  inset: 0 !important;
+}
+
+/* Reglas de animación de zoom fluido y continuo (Smooth Pinch-Zoom) */
+.leaflet-zoom-animated {
+  transition: transform 0.25s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+}
+
+/* Evitar parpadeos de las capas al hacer zoom */
+.leaflet-tile-container {
+  will-change: transform;
+}
+
+/* Evitar que elementos del mapa tengan animaciones o bordes de click activos */
+.leaflet-container:focus,
+.leaflet-container:active,
+.leaflet-container *:focus,
+.leaflet-container *:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Estilo para Modo Oscuro en Leaflet sin API Key */
+.dark-map .leaflet-tile-pane,
+.dark-map-theme .leaflet-tile-pane,
+.dark-map-tiles .leaflet-tile {
+  filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) !important;
+}
+
+/* En modo claro no lleva filtro */
+.light-map .leaflet-tile-pane,
+.light-map-theme .leaflet-tile-pane {
+  filter: none !important;
+}
+
+/* Ocultar panel de texto plano turn-by-turn de leaflet-routing-machine para mantener la UI limpia */
+.leaflet-routing-container {
+  display: none !important;
+}
+
+/* Controles estándar de Zoom de Leaflet */
+.leaflet-control-zoom {
+  border: 1px solid rgba(63, 63, 70, 0.8) !important;
+  border-radius: 14px !important;
+  overflow: hidden !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important;
+  margin-right: 14px !important;
+  margin-bottom: 24px !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+.leaflet-control-zoom a {
+  background-color: rgba(9, 9, 11, 0.95) !important;
+  color: #f4f4f5 !important;
+  width: 36px !important;
+  height: 36px !important;
+  line-height: 36px !important;
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.15s ease !important;
+  text-decoration: none !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background-color: #18181b !important;
+  color: #10b981 !important;
+}
+
+.leaflet-control-zoom-in {
+  border-bottom: 1px solid rgba(63, 63, 70, 0.6) !important;
+}
+
+.leaflet-control-zoom-out {
+  border-bottom: none !important;
+}
+
+/* Hide default leaflet attribution flag prefix clutter */
+.leaflet-control-attribution {
+  background: rgba(9, 9, 11, 0.75) !important;
+  color: #71717a !important;
+  font-size: 10px !important;
+  border-radius: 6px;
+  margin: 6px !important;
+  padding: 2px 6px !important;
+}
+.leaflet-control-attribution a {
+  color: #a1a1aa !important;
+}
+
+/* Animación de rebote (bounce) de 3 segundos para el Punto B (Bandera 🏁) al ser instanciado */
+@keyframes markerBounce3s {
+  0% {
+    transform: translateY(-42px) scale(0.65);
+    opacity: 0;
+  }
+  15% {
+    transform: translateY(0px) scale(1.18);
+    opacity: 1;
+  }
+  30% {
+    transform: translateY(-22px) scale(0.92);
+  }
+  45% {
+    transform: translateY(0px) scale(1.10);
+  }
+  60% {
+    transform: translateY(-10px) scale(0.97);
+  }
+  75% {
+    transform: translateY(0px) scale(1.04);
+  }
+  88% {
+    transform: translateY(-4px) scale(0.99);
+  }
+  100% {
+    transform: translateY(0px) scale(1);
+    opacity: 1;
+  }
+}
+
+.marker-bounce-3s {
+  animation: markerBounce3s 3s cubic-bezier(0.25, 1, 0.5, 1) both !important;
+  transform-origin: bottom center;
+}
+
+/* Custom Marker styles */
+.custom-map-icon,
+.custom-person-pin,
+.custom-flag-pin {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Pulso Radar Animado para Punto A (Origen / De akí) */
+.radar-pulse-anchor {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, 3px);
+  width: 10px;
+  height: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.pulse-ring {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #059669;
+  background: rgba(5, 150, 105, 0.22);
+  box-shadow: 0 0 14px rgba(5, 150, 105, 0.5);
+  animation: radarPulseRing 2.4s cubic-bezier(0.15, 0.85, 0.35, 1) infinite;
+  pointer-events: none;
+}
+
+.pulse-ring-2 {
+  animation-delay: 1.2s;
+}
+
+@keyframes radarPulseRing {
+  0% {
+    transform: scale(0.35);
+    opacity: 0.95;
+  }
+  50% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+
+/* Marcadores Punto A y Punto B: Interactividad, Agarre y Elevación Táctil */
+.custom-person-pin,
+.custom-flag-pin,
+.custom-person-pin *,
+.custom-flag-pin * {
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.custom-person-pin,
+.custom-flag-pin {
+  cursor: grab !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+.custom-person-pin .marker-wrapper,
+.custom-flag-pin .marker-wrapper {
+  cursor: grab !important;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.22s ease;
+  transform-origin: bottom center;
+  will-change: transform, filter;
+}
+
+.custom-person-pin:active,
+.custom-flag-pin:active,
+.custom-person-pin.marker-dragging,
+.custom-flag-pin.marker-dragging,
+.marker-dragging .marker-wrapper {
+  cursor: grabbing !important;
+}
+
+.marker-dragging.custom-person-pin,
+.marker-dragging.custom-flag-pin {
+  z-index: 9999 !important;
+}
+
+/* Efecto de elevación ('levantar' del mapa) mientras se arrastra */
+.marker-dragging .marker-wrapper {
+  transform: translateY(-12px) scale(1.15) !important;
+}
+
+.marker-dragging.custom-person-pin .marker-wrapper {
+  filter: drop-shadow(0 20px 24px rgba(0, 0, 0, 0.48)) drop-shadow(0 6px 14px rgba(5, 150, 105, 0.5)) !important;
+}
+
+.marker-dragging.custom-flag-pin .marker-wrapper {
+  filter: drop-shadow(0 20px 24px rgba(0, 0, 0, 0.48)) drop-shadow(0 6px 14px rgba(220, 38, 38, 0.5)) !important;
+}
+
+/* Driver Marker Real-time Dynamic Tracking Keyframe Animation */
+@keyframes driverMarkerFloat {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.45));
+  }
+  50% {
+    transform: translateY(-2px) scale(1.02);
+    filter: drop-shadow(0 8px 14px rgba(16, 185, 129, 0.35));
+  }
+}
+
+@keyframes pingEffect {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+  }
+  70% {
+    transform: scale(1.5);
+    box-shadow: 0 0 0 15px rgba(245, 158, 11, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
+}
+
+.custom-vehicle-marker {
+  animation: driverMarkerFloat 2.4s ease-in-out infinite;
+  transform-origin: center center;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, filter;
+}
+
+.marker-ping-arrival {
+  animation: pingEffect 1.5s cubic-bezier(0, 0, 0.2, 1) infinite !important;
+}
+
+.custom-vehicle-marker:hover {
+  animation-play-state: paused;
+  transform: scale(1.08) !important;
+}
+
+/* Custom scrollbar utility */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Safe area insets & Mobile Phone and Tablet Responsiveness (iOS, iPadOS, Samsung, Xiaomi, Motorola, Huawei) */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+}
+
+html {
+  height: 100%;
+  height: 100dvh;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100%;
+  min-height: 100dvh;
+  width: 100%;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+#root {
+  min-height: 100%;
+  min-height: 100dvh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+.pb-safe {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+}
+
+.pt-safe {
+  padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
+}
+
+.pl-safe {
+  padding-left: max(0.5rem, env(safe-area-inset-left, 0px));
+}
+
+.pr-safe {
+  padding-right: max(0.5rem, env(safe-area-inset-right, 0px));
+}
+
+/* Touch target minimum accessibility rule (44px x 44px) */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Custom Leaflet Popup Styling */
+.custom-leaflet-popup .leaflet-popup-content-wrapper {
+  background: rgba(9, 9, 11, 0.96) !important;
+  color: #f4f4f5 !important;
+  border-radius: 16px !important;
+  border: 1.5px solid rgba(16, 185, 129, 0.5) !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(16px) !important;
+  padding: 2px !important;
+}
+.custom-leaflet-popup .leaflet-popup-tip {
+  background: rgba(9, 9, 11, 0.96) !important;
+  border: 1.5px solid rgba(16, 185, 129, 0.5) !important;
+}
+.custom-leaflet-popup .leaflet-popup-close-button {
+  color: #a1a1aa !important;
+  padding: 6px !important;
+  font-size: 16px !important;
+}
+.custom-leaflet-popup .leaflet-popup-close-button:hover {
+  color: #ffffff !important;
+}
+
+/* Tablet (iPad, Samsung Galaxy Tab, Android Tablets) optimization */
+@media (min-width: 768px) and (max-width: 1280px) {
+  .tablet-card {
+    border-radius: 1.25rem;
+  }
+}
+
+/* Slim scrollbars for mobile screens and tablets */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(161, 161, 170, 0.25);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(161, 161, 170, 0.45);
+}
+
+/* ========================================================================= */
+/* ANDESMOVI MODOM CLARO CONTRASTE Y ENCUADRE DE CONTROLADORES DE MAPAS      */
+/* ========================================================================= */
+
+/* 1. Aislar filtros CSS de opacidad o inversión para que NO afecten Modo Claro */
+.light-map .leaflet-tile-pane,
+.light-map-theme .leaflet-tile-pane,
+html.light .leaflet-tile-pane {
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+html.light .leaflet-container,
+html.light #map,
+html.light #map-container {
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+/* 2. Estilos para los botones e interfaz flotante en Modo Claro (estilo inDrive diurno) */
+html.light #btn-center-gps,
+html.light #btn-map-zoom-in,
+html.light #btn-map-zoom-out {
+  background: #FFFFFF !important;
+  color: #0F172A !important; /* Texto gris muy oscuro/casi negro */
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+  opacity: 1 !important;
+}
+
+html.light #btn-center-gps svg,
+html.light #btn-map-zoom-in svg,
+html.light #btn-map-zoom-out svg {
+  color: #0F172A !important;
+}
+
+/* Estilos de tarjetas y paneles flotantes informativos en Modo Claro */
+html.light .route-metrics-card {
+  background: #FFFFFF !important;
+  color: #0F172A !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+}
+
+/* 3. Botones de acción principales (Aceptar, Pedir carrera, Botón activo superior) */
+html.light #btn-request-ride,
+html.light #btn-request-parcel,
+html.light #btn-request-delivery,
+html.light #btn-accept-offer,
+html.light .btn-primary-action,
+html.light #btn-service-screen-taxi.bg-emerald-500,
+html.light #btn-center-gps.bg-emerald-500,
+html.light .bg-emerald-500,
+html.light .bg-emerald-600 {
+  color: #FFFFFF !important;
+}
+
+html.light .bg-emerald-500 span,
+html.light .bg-emerald-500 svg,
+html.light .bg-emerald-600 span,
+html.light .bg-emerald-600 svg,
+html.light .bg-blue-600 span,
+html.light .bg-blue-600 svg,
+html.light .bg-rose-500 span,
+html.light .bg-rose-500 svg {
+  color: #FFFFFF !important;
+}
+
+/* 5. Asegurar Z-index superior sin capas translúcidas intermedias que los atenúen */
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-pane {
+  z-index: 1005 !important;
+}
+.leaflet-overlay-pane {
+  z-index: 1001 !important;
+}
+.leaflet-tile-pane {
+  z-index: 1 !important;
+}
+
+/* ========================================================================= */
+/* ALTO CONTRASTE EN MODO CLARO PARA ANDESMOVI (BARRA SUPERIOR Y BOTONES)    */
+/* ========================================================================= */
+
+/* 1. Barra Superior y Contenedores Flotantes */
+html.light header,
+html.light .navbar,
+html.light .top-bar-container {
+  background: #FFFFFF !important;
+  border: 1px solid #CBD5E1 !important; /* Borde gris definido */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important; /* Sombra marcada para despegar del mapa */
+  border-radius: 12px !important;
+}
+
+/* 2. Logo y Título "ANDESMOVI" */
+html.light #brand-home-link span {
+  color: #0F172A !important; /* Negro azulado profundo */
+  font-weight: 800 !important;
+  font-size: 16px !important;
+}
+
+/* 3. Barra de Estado Central (Badge de alta visibilidad para Conductor y Administrador) */
+html.light .hidden.md\:flex.items-center.gap-2.bg-amber-500\/15 {
+  background: #FEF3C7 !important; /* Fondo ámbar suave */
+  color: #92400E !important; /* Texto ámbar oscuro/café legible */
+  border: 1.5px solid #F59E0B !important;
+  font-weight: 700 !important;
+  padding: 6px 14px !important;
+  border-radius: 20px !important;
+}
+html.light .hidden.md\:flex.items-center.gap-2.bg-amber-500\/15 span {
+  color: #92400E !important;
+}
+
+html.light .hidden.md\:flex.items-center.gap-2.bg-purple-500\/15 {
+  background: #F3E8FF !important; /* Fondo púrpura suave */
+  color: #6B21A8 !important; /* Púrpura oscuro */
+  border: 1.5px solid #A855F7 !important;
+  font-weight: 700 !important;
+  padding: 6px 14px !important;
+  border-radius: 20px !important;
+}
+html.light .hidden.md\:flex.items-center.gap-2.bg-purple-500\/15 span {
+  color: #6B21A8 !important;
+}
+
+/* 4. Botón de Menú y Botones de la Esquina Superior Derecha */
+html.light #btn-three-dots-config {
+  background: #059669 !important; /* Verde esmeralda sólido */
+  color: #FFFFFF !important; /* Texto blanco en negrita */
+  font-weight: 700 !important;
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.4) !important;
+}
+html.light #btn-three-dots-config span,
+html.light #btn-three-dots-config svg {
+  color: #FFFFFF !important;
+}
+
+/* 5. Barra de Modos de Vista (Mapa | Dividido | Panel) */
+html.light .view-controller-container {
+  background: #FFFFFF !important;
+  border: 1px solid #94A3B8 !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15) !important;
+}
+
+html.light .view-controller-btn {
+  color: #334155 !important; /* Gris oscuro legible */
+  font-weight: 600 !important;
+}
+
+html.light .view-controller-btn.active-view-btn,
+html.light .view-controller-btn[style*="background"] {
+  background: #059669 !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+}
+
+/* 6. Regla General de Texto en Modo Claro */
+html.light .text-zinc-400:not(button *):not(.badge *),
+html.light .text-zinc-300:not(button *):not(.badge *),
+html.light .text-slate-400:not(button *):not(.badge *) {
+  color: #475569 !important; /* Gris oscuro para máximo contraste diurno */
+}
+
+html.light .text-zinc-200:not(button *):not(.badge *),
+html.light .text-slate-300:not(button *):not(.badge *) {
+  color: #1E293B !important;
+}
+
+/* ========================================================================= */
+/* PALETA DE ALTO CONTRASTE Y LUZ DE DÍA (DAYLIGHT CONTRAST ANDESMOVI)        */
+/* ========================================================================= */
+:root {
+  --bg-pure: #FFFFFF;
+  --bg-secondary: #F4F6F9;
+  --color-primary-electric: #0052FF;
+  --color-taxi-yellow: #FFB800;
+  --color-emerald-active: #00C853;
+  --color-alert-red: #FF3B30;
+  --text-main: #111827;
+  --text-muted: #374151;
+  --border-card: #E5E7EB;
+}
+
+/* Modo Claro de Alto Contraste para lectura nítida a plena luz del sol */
+html:not(.dark),
+body:not(.dark),
+[data-theme="light"] {
+  background-color: #FFFFFF !important;
+  color: #111827 !important;
+}
+
+/* Textos secundarios y etiquetas en Gris Carbón Oscuro (#374151), nunca gris deslavado */
+html:not(.dark) .text-slate-400,
+html:not(.dark) .text-slate-500,
+html:not(.dark) .text-zinc-400,
+html:not(.dark) .text-zinc-500,
+html:not(.dark) .text-gray-400,
+html:not(.dark) .text-gray-500 {
+  color: #374151 !important;
+  font-weight: 600 !important;
+}
+
+/* Textos principales en Negro Absoluto (#111827) con tipografía semibold/negrita */
+html:not(.dark) .text-slate-900,
+html:not(.dark) .text-slate-800,
+html:not(.dark) .text-zinc-900,
+html:not(.dark) .text-zinc-800,
+html:not(.dark) .text-gray-900,
+html:not(.dark) .text-black {
+  color: #111827 !important;
+  font-weight: 700 !important;
+}
+
+/* Fondos secundarios en gris muy limpio (#F4F6F9) */
+html:not(.dark) .bg-slate-50,
+html:not(.dark) .bg-slate-100,
+html:not(.dark) .bg-zinc-50,
+html:not(.dark) .bg-gray-50,
+html:not(.dark) .bg-gray-100 {
+  background-color: #F4F6F9 !important;
+}
+
+/* Tarjetas y paneles con fondo blanco y bordes sólidos definidos (#E5E7EB) */
+html:not(.dark) .border-slate-200,
+html:not(.dark) .border-slate-100,
+html:not(.dark) .border-zinc-200,
+html:not(.dark) .border-gray-200 {
+  border-color: #E5E7EB !important;
+}
+
+/* Botones de acción principales en Azul Eléctrico (#0052FF) con texto blanco puro */
+html:not(.dark) .btn-primary,
+html:not(.dark) .bg-blue-600,
+html:not(.dark) .bg-blue-700 {
+  background-color: #0052FF !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+}
+
+/* Botones y badges en Amarillo Taxi (#FFB800) con texto negro absoluto */
+html:not(.dark) .badge-taxi,
+html:not(.dark) .bg-amber-400,
+html:not(.dark) .bg-amber-500 {
+  background-color: #FFB800 !important;
+  color: #000000 !important;
+  font-weight: 900 !important;
+}
+
+/* Estados activos y confirmaciones en Verde Esmeralda Vivo (#00C853) con texto blanco */
+html:not(.dark) .bg-emerald-500,
+html:not(.dark) .bg-emerald-600 {
+  background-color: #00C853 !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+}
+
+/* Alertas y cancelaciones en Rojo Vivo (#FF3B30) con texto blanco */
+html:not(.dark) .bg-rose-500,
+html:not(.dark) .bg-red-500,
+html:not(.dark) .bg-red-600 {
+  background-color: #FF3B30 !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+}
+
+/* Inputs en modo claro: Fondo blanco, borde definido, texto nítido */
+html:not(.dark) input[type="text"],
+html:not(.dark) input[type="password"],
+html:not(.dark) input[type="number"],
+html:not(.dark) input[type="tel"],
+html:not(.dark) textarea,
+html:not(.dark) select {
+  background-color: #FFFFFF !important;
+  border-color: #E5E7EB !important;
+  color: #111827 !important;
+  font-weight: 600 !important;
+}
+
+html:not(.dark) input:focus,
+html:not(.dark) textarea:focus,
+html:not(.dark) select:focus {
+  border-color: #0052FF !important;
+  box-shadow: 0 0 0 2px rgba(0, 82, 255, 0.2) !important;
+}
+
+/* Controles de Leaflet en Modo Claro */
+html:not(.dark) .leaflet-control-zoom {
+  border: 2px solid #E5E7EB !important;
+  border-radius: 14px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+html:not(.dark) .leaflet-control-zoom a {
+  background-color: #FFFFFF !important;
+  color: #111827 !important;
+}
+
+html:not(.dark) .leaflet-control-zoom a:hover {
+  background-color: #F4F6F9 !important;
+  color: #0052FF !important;
+}
+
+html:not(.dark) .leaflet-control-attribution {
+  background: rgba(255, 255, 255, 0.85) !important;
+  color: #374151 !important;
+  border: 1px solid #E5E7EB !important;
+}
+
+/* Ensure button text with text-white remains crisp pure white */
+html.light button.text-white,
+html.light .btn-emerald,
+html.light .bg-emerald-500,
+html.light .bg-emerald-600,
+html.light .bg-blue-600,
+html.light .bg-rose-500 {
+  color: #FFFFFF !important;
+}
+
+html.light .text-amber-300:not(button *):not(.badge *),
+html.light .text-amber-200:not(button *):not(.badge *) {
+  color: #B45309 !important; /* Ámbar oscuro/café legible sobre fondo claro */
+}
+
+/* ========================================================================= */
+/* VISIBILIDAD DE MARCA Y BIENVENIDA ANDESMOVI EN ANDROID Y MÓVIL             */
+/* ========================================================================= */
+.andesmovi-logo-banner {
+  display: flex !important;
+}
+
+@media (max-width: 768px) {
+  /* En Teléfonos y Móviles: ocultar el bloque de bienvenida y sus tres pilares */
+  .andesmovi-welcome-hero {
+    display: none !important;
+  }
+
+  /* En Android y Móviles: ajustar el tamaño del logo y banner para ajuste perfecto */
+  .andesmovi-logo-banner {
+    max-width: 100% !important;
+    height: auto !important;
+    transform: scale(0.92);
+  }
+}
+
+@media (min-width: 769px) {
+  .andesmovi-welcome-hero {
+    display: flex !important;
+  }
+}
+
+/* Clase para aislar paneles flotantes del mapa inferior */
+.floating-sheet,
+.panel-rol {
+  position: fixed;
+  z-index: 2000;              /* Muy por encima del mapa (Leaflet suele usar 400-1000) */
+  touch-action: pan-y;        /* Permite deslizar contenido vertical dentro del panel sin mover el mapa */
+  pointer-events: auto;       /* Captura todos los clics y toques */
+  -webkit-overflow-scrolling: touch;
+  max-height: 85vh;
+  overflow-y: auto;           /* Scroll interno si el teclado reduce la pantalla */
+}
+
+/* Evitar que el contenedor del mapa capture eventos fuera de su área */
+.map-container {
+  touch-action: none;
+  z-index: 1;
+}
+
+/* ========================================================================= */
+/* MEJORA TOTAL DE VISIBILIDAD DE LETRAS Y CONTRASTE EN MODO OSCURO         */
+/* (CONDUCTOR, CLIENTE, ADMINISTRACIÓN, PROMOCIONES, ENCOMIENDAS)            */
+/* ========================================================================= */
+
+.dark, html.dark, body.dark-mode {
+  color-scheme: dark;
+}
+
+/* Elevación de nitidez para textos secundarios en Modo Oscuro */
+.dark .text-zinc-500,
+.dark .text-zinc-400,
+.dark .text-slate-500,
+.dark .text-slate-400,
+html.dark .text-zinc-500,
+html.dark .text-zinc-400,
+html.dark .text-slate-500,
+html.dark .text-slate-400 {
+  color: #E4E4E7 !important; /* Gris claro ultrapuro de alto contraste */
+}
+
+.dark .text-zinc-600,
+.dark .text-slate-600,
+html.dark .text-zinc-600,
+html.dark .text-slate-600 {
+  color: #A1A1AA !important; /* Plata brillante legible */
+}
+
+/* Títulos, etiquetas e identificadores de módulo en Modo Oscuro */
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6,
+.dark label, .dark strong, .dark th,
+html.dark h1, html.dark h2, html.dark h3, html.dark h4, html.dark h5, html.dark h6,
+html.dark label, html.dark strong, html.dark th {
+  color: #FFFFFF !important;
+}
+
+/* Entradas de texto, selects y textareas en Modo Oscuro */
+.dark input,
+.dark textarea,
+.dark select,
+html.dark input,
+html.dark textarea,
+html.dark select {
+  background-color: #09090B !important;
+  border-color: #3F3F46 !important;
+  color: #FFFFFF !important;
+  font-weight: 600 !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder,
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #A1A1AA !important;
+  opacity: 1 !important;
+}
+
+/* Aumento de brillo para colores de acento por rol / módulo */
+/* 1. CONDUCTOR: Ámbar neón */
+.dark .text-amber-400,
+.dark .text-amber-300,
+html.dark .text-amber-400,
+html.dark .text-amber-300 {
+  color: #FBBF24 !important;
+}
+
+/* 2. CLIENTE / PASAJERO: Esmeralda neón */
+.dark .text-emerald-400,
+.dark .text-emerald-300,
+html.dark .text-emerald-400,
+html.dark .text-emerald-300 {
+  color: #34D399 !important;
+}
+
+/* 3. ENCOMIENDAS / RUTAS: Azul / Sky neón */
+.dark .text-sky-400,
+.dark .text-sky-300,
+.dark .text-blue-400,
+html.dark .text-sky-400,
+html.dark .text-sky-300,
+html.dark .text-blue-400 {
+  color: #38BDF8 !important;
+}
+
+/* 4. ADMINISTRACIÓN Y PROMOCIONES: Púrpura / Dorado / Rosa */
+.dark .text-purple-400,
+.dark .text-purple-300,
+html.dark .text-purple-400,
+html.dark .text-purple-300 {
+  color: #C084FC !important;
+}
+
+/* Asegurar que las tarjetas oscuras con bordes sean claramente visibles */
+.dark .border-zinc-800,
+html.dark .border-zinc-800 {
+  border-color: #3F3F46 !important;
+}
+
+.dark .border-zinc-700,
+html.dark .border-zinc-700 {
+  border-color: #52525B !important;
+}
+
+

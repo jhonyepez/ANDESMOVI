@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#09090b" />
+      <stop offset="50%" stop-color="#18181b" />
+      <stop offset="100%" stop-color="#052e16" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+    <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded App Icon Background -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" />
+  <rect width="504" height="504" x="4" y="4" rx="108" fill="none" stroke="#22c55e" stroke-width="4" stroke-opacity="0.4" />
+
+  <!-- Cayembe Volcano Silhouette & Andean Peaks -->
+  <path d="M76 380 L256 120 L436 380 Z" fill="#27272a" />
+  <path d="M160 380 L256 220 L352 380 Z" fill="#3f3f46" />
+  
+  <!-- Snowy Summit (Nevado Cayembe) -->
+  <path d="M256 120 L216 185 L235 195 L256 175 L277 195 L296 185 Z" fill="#ffffff" />
+  <path d="M256 120 L235 155 L256 145 L277 155 Z" fill="#e0f2fe" opacity="0.9" />
+
+  <!-- Speed GPS Ring / Route Path -->
+  <path d="M120 410 Q 256 460 392 410" fill="none" stroke="url(#goldGrad)" stroke-width="12" stroke-linecap="round" />
+  
+  <!-- Car Silhouette / Movement Badge -->
+  <g transform="translate(206, 320)">
+    <rect width="100" height="42" rx="12" fill="url(#emeraldGrad)" />
+    <path d="M18 12 L32 2 L68 2 L82 12 Z" fill="#10b981" />
+    <circle cx="28" cy="42" r="9" fill="#09090b" stroke="#34d399" stroke-width="3" />
+    <circle cx="72" cy="42" r="9" fill="#09090b" stroke="#34d399" stroke-width="3" />
+    <circle cx="88" cy="18" r="4" fill="#fef08a" />
+  </g>
+
+  <!-- App Brand Text -->
+  <text x="256" y="475" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="34" font-weight="900" fill="#ffffff" letter-spacing="4">ANDESMOVI</text>
+  <text x="256" y="500" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#34d399" letter-spacing="2">ECUADOR</text>
+</svg>
