@@ -9,7 +9,8 @@ import {
   SimulatedVehicle,
   TelemetryLogEntry,
 } from '../../services/fleetSimulationService';
-import { MapComponent } from '../MapComponent';
+
+const MapComponent = React.lazy(() => import('../MapComponent'));
 import {
   Radio,
   Navigation,
@@ -582,10 +583,12 @@ export const AdminUnitsTracking: React.FC<AdminUnitsTrackingProps> = ({
               isDark ? 'border-zinc-700 bg-zinc-950' : 'border-slate-300 bg-slate-100'
             }`}
           >
-            <MapComponent
-              isAdminMap={true}
-              isDarkMode={isDark}
-            />
+            <React.Suspense fallback={<div className="w-full h-full bg-slate-900 animate-pulse" />}>
+              <MapComponent
+                isAdminMap={true}
+                isDarkMode={isDark}
+              />
+            </React.Suspense>
 
             {/* Selected Vehicle Float HUD over Map */}
             {selectedVehicle && (

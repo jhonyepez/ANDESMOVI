@@ -255,3 +255,5 @@ export const CallModal: React.FC<CallModalProps> = ({
     </div>
   );
 };
+
+export default CallModal;

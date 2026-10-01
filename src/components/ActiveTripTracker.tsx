@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { TripRequest, Driver, ChatMessage, Coordinates } from '../types';
 import { formatCurrency, COMMON_TOLLS } from '../utils/geoUtils';
-import { CallModal } from './CallModal';
+
+const CallModal = React.lazy(() => import('./CallModal'));
 import { ParcelProofOfDeliveryModal } from './ParcelProofOfDeliveryModal';
 import { ParcelReceiptModal } from './ParcelReceiptModal';
 import { RouteOptimizationModal } from './RouteOptimizationModal';
@@ -1289,16 +1290,18 @@ export const ActiveTripTracker: React.FC<ActiveTripTrackerProps> = ({
 
       {/* In-App Calling Modal (VoIP / WebRTC) */}
       {showCallModal && driver && (
-        <CallModal
-          participant={{
-            name: driver.name,
-            avatar: driver.avatar,
-            role: 'conductor',
-            vehicleInfo: `${driver.vehicle.model} • ${driver.vehicle.plate}`,
-            phoneMasked: driver.phone,
-          }}
-          onClose={() => setShowCallModal(false)}
-        />
+        <React.Suspense fallback={null}>
+          <CallModal
+            participant={{
+              name: driver.name,
+              avatar: driver.avatar,
+              role: 'conductor',
+              vehicleInfo: `${driver.vehicle.model} • ${driver.vehicle.plate}`,
+              phoneMasked: driver.phone,
+            }}
+            onClose={() => setShowCallModal(false)}
+          />
+        </React.Suspense>
       )}
 
       {/* Parcel Proof of Delivery Modal (Photo & Signature) */}

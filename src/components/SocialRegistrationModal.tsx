@@ -6,6 +6,7 @@ import { databaseService } from '../services/databaseService';
 import { ECUADOR_GEOGRAPHY, getCantonsForProvince } from '../data/ecuador_geography';
 import { getDeviceFingerprint } from '../utils/deviceFingerprint';
 import { processLoginSessionMiddleware } from '../services/sessionMiddleware';
+import { CameraPhotoCapture } from './CameraPhotoCapture';
 import { haptic } from '../utils/haptics';
 import {
   ShieldCheck,
@@ -704,130 +705,20 @@ export const SocialRegistrationModal: React.FC<SocialRegistrationModalProps> = (
             </div>
           )}
 
-          {/* SECTION 1: CAPTURA DE FOTO DE ROSTRO REAL (RECUADRO CIRCULAR & CÁMARA) */}
-          <div className={`p-4 rounded-2xl border space-y-3.5 ${
+          {/* SECTION 1: CAPTURA DE FOTO DE ROSTRO REAL (EN VIVO CON CÁMARA O NATIVA) */}
+          <div className={`p-4 rounded-2xl border space-y-3 ${
             isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-slate-50 border-slate-100'
           }`}>
-            <div className="flex items-center gap-2">
-              <Camera className={`w-4 h-4 shrink-0 ${isDark ? 'text-amber-400' : 'text-amber-600'}`} />
-              <h3 className={`text-xs font-black uppercase tracking-wider ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
-                1. Foto de Rostro Real en Vivo (Obligatorio)
-              </h3>
-            </div>
-
-            <p className={`text-xs leading-relaxed p-2.5 rounded-xl border ${
-              isDark ? 'text-zinc-300 bg-zinc-900/80 border-zinc-800/80' : 'text-slate-600 bg-white border-slate-200'
-            }`}>
-              Por seguridad en AndesMovi, se requiere una foto de rostro real tomada en el momento. No se aceptan avatares, logos ni fotos genéricas.
-            </p>
-
-            {/* Recuadro Circular de la Foto / Cámara */}
-            <div className="flex flex-col items-center justify-center py-2 space-y-3">
-              <div className={`relative w-36 h-36 rounded-full overflow-hidden border-4 shadow-2xl flex items-center justify-center group ${
-                isDark ? 'border-amber-500/80 bg-zinc-900' : 'border-white bg-slate-200 shadow-slate-200'
-              }`}>
-                {photoUrl ? (
-                  <img
-                    src={photoUrl}
-                    alt="Foto de rostro real"
-                    className="w-full h-full object-cover"
-                  />
-                ) : isCameraActive ? (
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="w-full h-full object-cover transform -scale-x-100"
-                  />
-                ) : (
-                  <div className="text-center p-3">
-                    <User className="w-12 h-12 text-zinc-600 mx-auto mb-1" />
-                    <span className="text-[10px] text-zinc-500 font-semibold block">Sin Foto Real</span>
-                  </div>
-                )}
-
-                {photoUrl && (
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <CheckCircle2 className="w-10 h-10 text-emerald-400" />
-                  </div>
-                )}
-              </div>
-
-              {/* Botones de Captura e Interacción */}
-              {photoUrl ? (
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleRepeatPhoto}
-                    className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-colors ${
-                      isDark ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-zinc-700' : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200'
-                    }`}
-                  >
-                    <RotateCcw className={`w-3.5 h-3.5 ${isDark ? 'text-amber-400' : 'text-amber-600'}`} />
-                    <span>Repetir foto</span>
-                  </button>
-                  <span className={`text-[11px] font-bold flex items-center gap-1 px-2.5 py-1 rounded-xl border ${
-                    isDark ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-emerald-700 bg-emerald-50 border-emerald-200'
-                  }`}>
-                    <Check className="w-3.5 h-3.5" /> Foto lista
-                  </span>
-                </div>
-              ) : isCameraActive ? (
-                <div className="flex flex-col items-center gap-2 w-full max-w-xs">
-                  <button
-                    type="button"
-                    onClick={handleCaptureLivePhoto}
-                    disabled={isCapturingPhoto}
-                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-zinc-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 active:scale-95 transition-all"
-                  >
-                    <Camera className="w-4 h-4" />
-                    <span>Capturar Foto Real</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={stopCameraStream}
-                    className={`text-[11px] ${isDark ? 'text-zinc-400 hover:text-white' : 'text-slate-500 hover:text-slate-800'}`}
-                  >
-                    Cancelar cámara
-                  </button>
-                </div>
-              ) : (
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-2 w-full max-w-md">
-                  <button
-                    type="button"
-                    onClick={handleStartCamera}
-                    className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 active:scale-95 transition-all"
-                  >
-                    <Camera className="w-4 h-4" />
-                    <span>Tomar Foto con la Cámara</span>
-                  </button>
-
-                  <label className={`w-full sm:w-auto px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border cursor-pointer transition-colors ${
-                    isDark ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-zinc-700' : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200 shadow-sm'
-                  }`}>
-                    <Upload className={`w-4 h-4 ${isDark ? 'text-amber-400' : 'text-amber-600'}`} />
-                    <span>Subir foto real desde galería</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleGalleryPhotoUpload}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-              )}
-
-              {/* Aviso si el permiso fue denegado */}
-              {cameraPermissionDenied && (
-                <div className="mt-2 p-3 rounded-xl bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs flex items-start gap-2 max-w-md animate-fadeIn">
-                  <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                  <span>
-                    El permiso de cámara es indispensable para verificar tu identidad y proteger la seguridad de los viajes. Por favor, acéptalo en los ajustes del dispositivo.
-                  </span>
-                </div>
-              )}
-            </div>
+            <CameraPhotoCapture
+              value={photoUrl}
+              onChange={setPhotoUrl}
+              onClear={() => setPhotoUrl('')}
+              label="1. Foto de Rostro Real en Vivo (Obligatorio)"
+              description="Por seguridad en AndesMovi, se requiere una foto de rostro real tomada en el momento con la cámara del dispositivo. No se aceptan avatares ni fotos genéricas."
+              required
+              isDark={isDark}
+              accountRole={role}
+            />
           </div>
 
           {/* SECTION 2: DATOS DE REGISTRO OBLIGATORIOS */}

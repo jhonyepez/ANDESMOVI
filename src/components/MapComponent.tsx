@@ -120,16 +120,20 @@ export function getSafeTileConfig(isDark?: boolean): SafeTileConfig {
 }
 
 /**
- * Crea una capa TileLayer de Leaflet tolerante a fallos con soporte retina y conmutación automática de contingencia.
+ * Crea una capa TileLayer de Leaflet tolerante a fallos, optimizada para rendimiento móvil y sin tirones (lag).
  */
 export function createSafeTileLayer(config: SafeTileConfig): L.TileLayer {
   const layer = L.tileLayer(config.url, {
     maxZoom: config.maxZoom || 19,
-    maxNativeZoom: 17, // OpenTopoMap genera tiles nativos hasta zoom 17; Leaflet los escala fluidamente a 18 y 19 para máxima nitidez urbana
+    maxNativeZoom: 17, // OpenTopoMap genera tiles nativos hasta zoom 17; Leaflet los escala fluidamente a 18 y 19
     attribution: config.attribution,
     subdomains: config.subdomains,
-    detectRetina: true,
+    detectRetina: false, // Optimización móvil: evita cuadruplicar las solicitudes de teselas en pantallas retina
     crossOrigin: true,
+    keepBuffer: 10, // Mantiene en memoria las teselas circundantes para desplazamientos fluidos
+    updateWhenIdle: true, // Espera a pausar el movimiento para cargar nuevas teselas, eliminando el lag en 60fps
+    updateWhenZooming: false, // Evita sobrecarga de red durante el zoom o pellizco
+    tileSize: 256,
   });
 
   let hasSwappedToFallback = false;
@@ -315,14 +319,39 @@ export const ECUADOR_CITIES = [
   { name: 'Quito', canton: 'Pichincha', lat: -0.1807, lng: -78.4678, zoom: 14, badge: 'Capital' },
 ];
 
+const GEOCODE_CACHE_PREFIX = 'andesmovi_geo_cache_';
+const geocodeMemoryCache = new Map<string, { streetName: string; fullAddress: string; timestamp: number }>();
+
 /**
- * Geocodificación inversa usando OSRM Nearest API para convertir coordenadas
- * en nombres de calles legibles por humanos (ej. 'Calle Bolívar', 'Av. Veintimilla').
+ * Geocodificación inversa ultra rápida con caché local dual (Memoria + localStorage)
+ * Convierte coordenadas en nombres de calles legibles sin saturar la red en cada toque.
  */
 export async function reverseGeocodeOSRM(
   lat: number,
   lng: number
 ): Promise<{ streetName: string; fullAddress: string }> {
+  // Redondeo a 4 decimales (~11m de precisión), ideal para reutilizar caché de calles
+  const cacheKey = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+
+  // 1. Caché instantáneo en memoria RAM (0ms)
+  const mem = geocodeMemoryCache.get(cacheKey);
+  if (mem) {
+    return { streetName: mem.streetName, fullAddress: mem.fullAddress };
+  }
+
+  // 2. Caché persistente en localStorage
+  try {
+    const stored = localStorage.getItem(GEOCODE_CACHE_PREFIX + cacheKey);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Date.now() - parsed.timestamp < 1000 * 60 * 60 * 24 * 7) {
+        geocodeMemoryCache.set(cacheKey, parsed);
+        return { streetName: parsed.streetName, fullAddress: parsed.fullAddress };
+      }
+    }
+  } catch {}
+
+  // 3. Petición a OSRM si no está en caché
   try {
     const url = `https://router.project-osrm.org/nearest/v1/driving/${lng},${lat}?number=1`;
     const response = await fetch(url);
@@ -331,10 +360,15 @@ export async function reverseGeocodeOSRM(
       if (data.waypoints && data.waypoints.length > 0 && data.waypoints[0].name) {
         const street = data.waypoints[0].name.trim();
         if (street.length > 0) {
-          return {
+          const result = {
             streetName: street,
             fullAddress: `${street}, Tulcán, Carchi`,
           };
+          geocodeMemoryCache.set(cacheKey, { ...result, timestamp: Date.now() });
+          try {
+            localStorage.setItem(GEOCODE_CACHE_PREFIX + cacheKey, JSON.stringify({ ...result, timestamp: Date.now() }));
+          } catch {}
+          return result;
         }
       }
     }
@@ -1153,16 +1187,15 @@ export const AndesMoviMap: React.FC<MapComponentProps & MapViewProps> = ({
     );
   };
 
-  useEffect(() => {
-    onSelectCoordinatesRef.current = onSelectCoordinates;
-    selectionModeRef.current = selectionMode;
-    serviceTypeRef.current = serviceType;
-    systemTariffsRef.current = systemTariffs;
-    onRouteCalculatedRef.current = onRouteCalculated;
-    onUserOfferChangeRef.current = onUserOfferChange;
-    onSuggestedFareChangeRef.current = onSuggestedFareChange;
-    onPriceChangeRef.current = onPriceChange;
-  });
+  // Sincronización directa y síncrona de refs sin ciclos innecesarios de useEffect
+  onSelectCoordinatesRef.current = onSelectCoordinates;
+  selectionModeRef.current = selectionMode;
+  serviceTypeRef.current = serviceType;
+  systemTariffsRef.current = systemTariffs;
+  onRouteCalculatedRef.current = onRouteCalculated;
+  onUserOfferChangeRef.current = onUserOfferChange;
+  onSuggestedFareChangeRef.current = onSuggestedFareChange;
+  onPriceChangeRef.current = onPriceChange;
 
   const isDark = effectiveTheme ? effectiveTheme === 'dark' : isDarkMode;
 
@@ -3058,5 +3091,29 @@ export const AndesMoviMap: React.FC<MapComponentProps & MapViewProps> = ({
   );
 };
 
-export const MapComponent = AndesMoviMap;
-export default AndesMoviMap;
+// Comparador estricto para evitar redibujados innecesarios del mapa durante interacciones del usuario en paneles
+function areMapPropsEqual(prev: MapComponentProps, next: MapComponentProps): boolean {
+  if (prev.origin?.lat !== next.origin?.lat || prev.origin?.lng !== next.origin?.lng || prev.origin?.name !== next.origin?.name) return false;
+  if (prev.destination?.lat !== next.destination?.lat || prev.destination?.lng !== next.destination?.lng || prev.destination?.name !== next.destination?.name) return false;
+  if ((prev.intermediateStops?.length || 0) !== (next.intermediateStops?.length || 0)) return false;
+  if (
+    prev.activeDriver?.id !== next.activeDriver?.id ||
+    prev.activeDriver?.currentCoords?.lat !== next.activeDriver?.currentCoords?.lat ||
+    prev.activeDriver?.currentCoords?.lng !== next.activeDriver?.currentCoords?.lng
+  ) return false;
+  if ((prev.drivers?.length || 0) !== (next.drivers?.length || 0)) return false;
+  if (prev.tripStatus !== next.tripStatus) return false;
+  if (prev.selectionMode !== next.selectionMode) return false;
+  if (prev.serviceType !== next.serviceType) return false;
+  if (prev.tarifaCalculada !== next.tarifaCalculada) return false;
+  if (prev.ofertaUsuario !== next.ofertaUsuario) return false;
+  if (prev.isSidePanelVisible !== next.isSidePanelVisible) return false;
+  if (prev.isDriverMode !== next.isDriverMode) return false;
+  if (prev.isAdminMap !== next.isAdminMap) return false;
+  if (prev.isDarkMode !== next.isDarkMode) return false;
+  if (prev.effectiveTheme !== next.effectiveTheme) return false;
+  return true;
+}
+
+export const MapComponent = React.memo(AndesMoviMap, areMapPropsEqual);
+export default MapComponent;

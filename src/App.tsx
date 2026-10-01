@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, Suspense, lazy } from 'react';
 import {
   Coordinates,
   ServiceType,
@@ -54,37 +54,51 @@ import { formatCurrency, calculateDistanceKm, estimateDurationMinutes, calculate
 import { getCoordinatesForEcuadorProvince } from './data/ecuador_geography';
 import { fleetSimulationService } from './services/fleetSimulationService';
 import { Navbar } from './components/Navbar';
-import { MapComponent } from './components/MapComponent';
 import { RideBooking } from './components/RideBooking';
 import { ExecutiveBookingView } from './components/ExecutiveBookingView';
 import { DeliveryBooking } from './components/DeliveryBooking';
 import { ParcelBooking } from './components/ParcelBooking';
 import { AndesMoviHomeHub } from './components/AndesMoviHomeHub';
-import { AdminPanelModal } from './components/AdminPanelModal';
-import { AdminLoginGateModal } from './components/admin/AdminLoginGateModal';
-import { AdminSidebarHub } from './components/admin/AdminSidebarHub';
 import { ActiveTripTracker } from './components/ActiveTripTracker';
-import { PaymentModal } from './components/PaymentModal';
-import { DriverModeModal } from './components/DriverModeModal';
-import { ChatModal } from './components/ChatModal';
-import { CallModal, CallParticipant } from './components/CallModal';
-import { WalletModal } from './components/WalletModal';
-import { SOSModal } from './components/SOSModal';
-import { ScheduleModal } from './components/ScheduleModal';
-import { ScheduledBookingsModal } from './components/ScheduledBookingsModal';
-import { RatingModal } from './components/RatingModal';
-import { AuthModal } from './components/AuthModal';
-import { RegistrationGateModal } from './components/RegistrationGateModal';
-import { TripHistoryModal } from './components/TripHistoryModal';
-import { AlliedCooperativesModal } from './components/AlliedCooperativesModal';
-import { MobileSdkGuideModal } from './components/MobileSdkGuideModal';
-import { FlutterAppDesignModal } from './components/FlutterAppDesignModal';
-import { LoyaltyPromosModal } from './components/LoyaltyPromosModal';
-import { SettingsModal, SettingsSection } from './components/SettingsModal';
-import { SplashScreen } from './components/SplashScreen';
 import { PushNotificationToast } from './components/PushNotificationToast';
-import { NotificationCenterModal } from './components/NotificationCenterModal';
 import { NetworkStatusBanner } from './components/NetworkStatusBanner';
+import type { CallParticipant } from './components/CallModal';
+import type { SettingsSection } from './components/SettingsModal';
+
+// Carga perezosa (Lazy Loading) de mapas y modales pesados para eliminar lag y reducir el tamaño inicial de memoria
+const MapComponent = lazy(() => import('./components/MapComponent'));
+const AdminPanelModal = lazy(() => import('./components/AdminPanelModal').then((m) => ({ default: m.AdminPanelModal })));
+const AdminLoginGateModal = lazy(() => import('./components/admin/AdminLoginGateModal').then((m) => ({ default: m.AdminLoginGateModal })));
+const AdminSidebarHub = lazy(() => import('./components/admin/AdminSidebarHub').then((m) => ({ default: m.AdminSidebarHub })));
+const PaymentModal = lazy(() => import('./components/PaymentModal').then((m) => ({ default: m.PaymentModal })));
+const DriverModeModal = lazy(() => import('./components/DriverModeModal').then((m) => ({ default: m.DriverModeModal })));
+const ChatModal = lazy(() => import('./components/ChatModal').then((m) => ({ default: m.ChatModal })));
+const CallModal = lazy(() => import('./components/CallModal').then((m) => ({ default: m.CallModal })));
+const WalletModal = lazy(() => import('./components/WalletModal').then((m) => ({ default: m.WalletModal })));
+const SOSModal = lazy(() => import('./components/SOSModal').then((m) => ({ default: m.SOSModal })));
+const ScheduleModal = lazy(() => import('./components/ScheduleModal').then((m) => ({ default: m.ScheduleModal })));
+const ScheduledBookingsModal = lazy(() => import('./components/ScheduledBookingsModal').then((m) => ({ default: m.ScheduledBookingsModal })));
+const RatingModal = lazy(() => import('./components/RatingModal').then((m) => ({ default: m.RatingModal })));
+const AuthModal = lazy(() => import('./components/AuthModal').then((m) => ({ default: m.AuthModal })));
+const RegistrationGateModal = lazy(() => import('./components/RegistrationGateModal').then((m) => ({ default: m.RegistrationGateModal })));
+const TripHistoryModal = lazy(() => import('./components/TripHistoryModal').then((m) => ({ default: m.TripHistoryModal })));
+const AlliedCooperativesModal = lazy(() => import('./components/AlliedCooperativesModal').then((m) => ({ default: m.AlliedCooperativesModal })));
+const MobileSdkGuideModal = lazy(() => import('./components/MobileSdkGuideModal').then((m) => ({ default: m.MobileSdkGuideModal })));
+const FlutterAppDesignModal = lazy(() => import('./components/FlutterAppDesignModal').then((m) => ({ default: m.FlutterAppDesignModal })));
+const LoyaltyPromosModal = lazy(() => import('./components/LoyaltyPromosModal').then((m) => ({ default: m.LoyaltyPromosModal })));
+const SettingsModal = lazy(() => import('./components/SettingsModal').then((m) => ({ default: m.SettingsModal })));
+const NotificationCenterModal = lazy(() => import('./components/NotificationCenterModal').then((m) => ({ default: m.NotificationCenterModal })));
+const SplashScreen = lazy(() => import('./components/SplashScreen').then((m) => ({ default: m.SplashScreen })));
+
+// Componente esqueleto liviano para carga de mapa sin salto de diseño
+const MapSkeletonLoader = () => (
+  <div className="w-full h-full bg-slate-900/95 flex flex-col items-center justify-center gap-3 text-emerald-400 p-6 select-none animate-pulse">
+    <div className="w-8 h-8 border-3 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
+    <span className="text-xs font-black uppercase tracking-wider text-emerald-400">
+      Cargando Mapa en Relieve Andino...
+    </span>
+  </div>
+);
 import { pushNotificationService } from './services/notificationService';
 import { subscribeToSessionRevocations, verifySessionTokenMiddleware } from './services/sessionMiddleware';
 import { getDeviceFingerprint } from './utils/deviceFingerprint';
@@ -558,7 +572,7 @@ export default function App() {
     destino: '',
   });
 
-  const handleRouteCalculated = (
+  const handleRouteCalculated = useCallback((
     fare: number,
     distanceKm: number,
     durationMin: number,
@@ -618,12 +632,12 @@ export default function App() {
     });
     setTarifaCalculada(finalFare);
     setOfertaUsuario(finalFare);
-  };
+  }, [activeService, destination?.name, destination?.address, origin.name, origin.address]);
 
-  const handleUserOfferChange = (newOffer: number) => {
+  const handleUserOfferChange = useCallback((newOffer: number) => {
     if (esPrecioFijo) return; // Bloqueado para precio fijo
     setOfertaUsuario(newOffer);
-  };
+  }, [esPrecioFijo]);
 
   // Adapta automáticamente el mapa al centro de flota sin sobreescribir la posición GPS física
   useEffect(() => {
@@ -1532,7 +1546,7 @@ export default function App() {
   };
 
   // Handle map click coordinate selection (Origen, Destino o Parada con 1 Clic)
-  const handleSelectCoordinatesFromMap = (coords: Coordinates, mode: 'origin' | 'destination' | 'stop') => {
+  const handleSelectCoordinatesFromMap = useCallback((coords: Coordinates, mode: 'origin' | 'destination' | 'stop') => {
     if (mode === 'origin') {
       setOrigin(coords);
       setDestination(null);
@@ -1572,7 +1586,7 @@ export default function App() {
       });
       setSelectionMode(null);
     }
-  };
+  }, []);
 
   // 1. VIAJES FLOW: Start searching drivers (Publish offer & Broadcast to all drivers)
   const handleStartRideSearch = (bookingData: {
@@ -2959,19 +2973,21 @@ export default function App() {
             />
           ) : userRole === 'admin' ? (
             /* Master Administrative Sidebar Hub */
-            <AdminSidebarHub
-              currentAdminUser={currentAdminUser}
-              onOpenFullPanel={(initialTab) => {
-                handleOpenAdminPanel(initialTab);
-              }}
-              onSwitchRole={handleSelectRole}
-              onLogoutAdmin={handleAdminLogout}
-              pendingRechargesCount={walletRecharges.filter((r) => r.status === 'pendiente').length}
-              activeEncomiendasCount={adminEncomiendas.filter((e) => e.status !== 'entregada').length}
-              trackedDriversCount={trackedDrivers.length}
-              cantonsCount={cantonTariffs.length}
-              isDark={effectiveTheme === 'dark'}
-            />
+            <Suspense fallback={<div className="p-4 text-center text-xs text-zinc-500">Cargando administración...</div>}>
+              <AdminSidebarHub
+                currentAdminUser={currentAdminUser}
+                onOpenFullPanel={(initialTab) => {
+                  handleOpenAdminPanel(initialTab);
+                }}
+                onSwitchRole={handleSelectRole}
+                onLogoutAdmin={handleAdminLogout}
+                pendingRechargesCount={walletRecharges.filter((r) => r.status === 'pendiente').length}
+                activeEncomiendasCount={adminEncomiendas.filter((e) => e.status !== 'entregada').length}
+                trackedDriversCount={trackedDrivers.length}
+                cantonsCount={cantonTariffs.length}
+                isDark={effectiveTheme === 'dark'}
+              />
+            </Suspense>
           ) : (
             /* Passenger / Customer Modes */
             showHomeHub ? (
@@ -3259,30 +3275,32 @@ export default function App() {
           } relative transition-all duration-200`}
           style={{ width: '100%', height: '100%', minHeight: mobileView === 'split' ? '220px' : '400px' }}
         >
-          <MapComponent
-            origin={origin}
-            destination={destination}
-            intermediateStops={intermediateStops}
-            activeDriver={activeDriver}
-            tripStatus={activeTrip?.status || 'idle'}
-            onSelectCoordinates={handleSelectCoordinatesFromMap}
-            selectionMode={selectionMode}
-            serviceType={activeService}
-            systemTariffs={systemTariffs}
-            isDarkMode={effectiveTheme === 'dark'}
-            effectiveTheme={effectiveTheme}
-            tarifaCalculada={tarifaCalculada}
-            ofertaUsuario={ofertaUsuario}
-            onUserOfferChange={handleUserOfferChange}
-            onRouteCalculated={handleRouteCalculated}
-            isSidePanelVisible={mobileView !== 'map'}
-            onOpenMobileSdkGuide={() => setShowMobileSdkGuide(true)}
-            isDriverMode={userRole === 'conductor'}
-            onRequestRide={(_offeredFare) => {
-              haptic.confirmTrip();
-              setMobileView('panel');
-            }}
-          />
+          <Suspense fallback={<MapSkeletonLoader />}>
+            <MapComponent
+              origin={origin}
+              destination={destination}
+              intermediateStops={intermediateStops}
+              activeDriver={activeDriver}
+              tripStatus={activeTrip?.status || 'idle'}
+              onSelectCoordinates={handleSelectCoordinatesFromMap}
+              selectionMode={selectionMode}
+              serviceType={activeService}
+              systemTariffs={systemTariffs}
+              isDarkMode={effectiveTheme === 'dark'}
+              effectiveTheme={effectiveTheme}
+              tarifaCalculada={tarifaCalculada}
+              ofertaUsuario={ofertaUsuario}
+              onUserOfferChange={handleUserOfferChange}
+              onRouteCalculated={handleRouteCalculated}
+              isSidePanelVisible={mobileView !== 'map'}
+              onOpenMobileSdkGuide={() => setShowMobileSdkGuide(true)}
+              isDriverMode={userRole === 'conductor'}
+              onRequestRide={(_offeredFare) => {
+                haptic.confirmTrip();
+                setMobileView('panel');
+              }}
+            />
+          </Suspense>
 
           {/* Botón flotante para conductor en el mapa: Activo / Fuera de servicio (muy visible) */}
           {userRole === 'conductor' && (
@@ -3453,16 +3471,18 @@ export default function App() {
         </div>
       )}
 
-      {/* Payment Processing Modal (Ecuador USD Gateway) */}
-      {pendingPaymentData && (
-        <PaymentModal
-          amount={pendingPaymentData.amount}
-          serviceTitle={pendingPaymentData.title}
-          walletBalance={walletBalance}
-          onPaymentSuccess={pendingPaymentData.onSuccess}
-          onClose={() => setPendingPaymentData(null)}
-        />
-      )}
+      {/* Modales y Portales Pesados cargados con Suspense bajo demanda para máxima fluidez móvil */}
+      <Suspense fallback={null}>
+        {/* Payment Processing Modal (Ecuador USD Gateway) */}
+        {pendingPaymentData && (
+          <PaymentModal
+            amount={pendingPaymentData.amount}
+            serviceTitle={pendingPaymentData.title}
+            walletBalance={walletBalance}
+            onPaymentSuccess={pendingPaymentData.onSuccess}
+            onClose={() => setPendingPaymentData(null)}
+          />
+        )}
 
       {/* Driver/Customer Real-Time Closed Chat Modal */}
       {showChatModal && activeDriver && (
@@ -3860,26 +3880,27 @@ export default function App() {
         }}
       />
 
-      {/* Bloqueo Obligatorio de Registro y Documentos (Cédula de Identidad, Licencia y Documentos Oficiales) */}
-      <RegistrationGateModal
-        isOpen={!showSplashScreen && !currentUser && !isRegistrationDismissed}
-        isDark={effectiveTheme === 'dark'}
-        initialTab={registrationGateTab}
-        initialRole={registrationGateRole}
-        onClose={() => setIsRegistrationDismissed(true)}
-        onCompleteRegistration={handleCompleteRegistration}
-        onLoginSuccess={(loggedUser) => {
-          try {
-            localStorage.setItem('andesmovi_user_session', JSON.stringify(loggedUser));
-          } catch (e) {
-            console.error(e);
-          }
-          setCurrentUser(loggedUser);
-          if (loggedUser.role === 'conductor') {
-            setUserRole('conductor');
-          }
-        }}
-      />
+        {/* Bloqueo Obligatorio de Registro y Documentos (Cédula de Identidad, Licencia y Documentos Oficiales) */}
+        <RegistrationGateModal
+          isOpen={!showSplashScreen && !currentUser && !isRegistrationDismissed}
+          isDark={effectiveTheme === 'dark'}
+          initialTab={registrationGateTab}
+          initialRole={registrationGateRole}
+          onClose={() => setIsRegistrationDismissed(true)}
+          onCompleteRegistration={handleCompleteRegistration}
+          onLoginSuccess={(loggedUser) => {
+            try {
+              localStorage.setItem('andesmovi_user_session', JSON.stringify(loggedUser));
+            } catch (e) {
+              console.error(e);
+            }
+            setCurrentUser(loggedUser);
+            if (loggedUser.role === 'conductor') {
+              setUserRole('conductor');
+            }
+          }}
+        />
+      </Suspense>
 
       {/* FLOATING MASTER ADMIN CONTROLLER (Control Maestro Ubicuo en Toda la Aplicación) */}
       {userRole === 'admin' && (

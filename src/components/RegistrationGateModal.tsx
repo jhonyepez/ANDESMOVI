@@ -15,6 +15,7 @@ import { LegalTermsModal, LegalDocType } from './LegalTermsModal';
 import { processLoginSessionMiddleware } from '../services/sessionMiddleware';
 import { queryCriminalRecordByCedula, CriminalRecordResult } from '../services/ministerioInteriorService';
 import { databaseService } from '../services/databaseService';
+import { CameraPhotoCapture } from './CameraPhotoCapture';
 import {
   ShieldCheck,
   CreditCard,
@@ -83,6 +84,7 @@ export const RegistrationGateModal: React.FC<RegistrationGateModalProps> = ({
   // Personal data & Nationality
   const [nationalityType, setNationalityType] = useState<'ecuatoriano' | 'extranjero'>('ecuatoriano');
   const [fullName, setFullName] = useState<string>('');
+  const [userFacePhoto, setUserFacePhoto] = useState<string>('');
   const [cedula, setCedula] = useState<string>('');
   const [phone, setPhone] = useState<string>('');
   const [email, setEmail] = useState<string>('');
@@ -575,11 +577,12 @@ export const RegistrationGateModal: React.FC<RegistrationGateModalProps> = ({
       province,
       canton,
       avatar:
-        accountRole === 'conductor'
+        userFacePhoto ||
+        (accountRole === 'conductor'
           ? (selectedVehicleType === 'moto'
               ? 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=150&auto=format&fit=crop&q=80'
               : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80')
-          : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+          : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80'),
       authProvider: 'cedula',
       rating: 5.0,
       totalTripsCompleted: 0,
@@ -898,6 +901,17 @@ export const RegistrationGateModal: React.FC<RegistrationGateModalProps> = ({
                     </div>
                   )}
                 </div>
+
+                {/* Foto de Rostro Real en Tiempo Real con Cámara Frontal */}
+                <CameraPhotoCapture
+                  value={userFacePhoto}
+                  onChange={setUserFacePhoto}
+                  onClear={() => setUserFacePhoto('')}
+                  label="Foto de Rostro en Tiempo Real (Cámara)"
+                  description="Tómate una foto directamente con la cámara de tu teléfono para tu credencial oficial de AndesMovi."
+                  isDark={true}
+                  accountRole={accountRole}
+                />
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>

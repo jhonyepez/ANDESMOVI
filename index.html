@@ -21,6 +21,14 @@
     <meta name="HandheldFriendly" content="true" />
     <meta name="MobileOptimized" content="width" />
 
+    <!-- Conexiones anticipadas (preconnect / dns-prefetch) para acelerar tiles de mapa y geocodificación -->
+    <link rel="preconnect" href="https://a.tile.opentopomap.org" crossorigin />
+    <link rel="preconnect" href="https://b.tile.opentopomap.org" crossorigin />
+    <link rel="preconnect" href="https://c.tile.opentopomap.org" crossorigin />
+    <link rel="preconnect" href="https://server.arcgisonline.com" crossorigin />
+    <link rel="preconnect" href="https://router.project-osrm.org" crossorigin />
+    <link rel="dns-prefetch" href="https://router.project-osrm.org" />
+
     <!-- Leaflet CSS Oficial (Cartografía sin clave, rápida y sin errores de teselas) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 

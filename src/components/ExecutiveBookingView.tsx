@@ -28,7 +28,8 @@ import {
 } from 'lucide-react';
 import { Coordinates, ServiceType, SystemTariffs, UserProfile, ExecutiveSeatAdvanceVoucher, ExecutiveTripFrequency } from '../types';
 import { haptic } from '../utils/haptics';
-import { MapComponent } from './MapComponent';
+
+const MapComponent = React.lazy(() => import('./MapComponent'));
 
 // Cuentas bancarias oficiales de la empresa para depósitos de reserva ($10.00 USD)
 export const COMPANY_DEPOSIT_BANK_ACCOUNTS = [
@@ -897,13 +898,15 @@ export const ExecutiveBookingView: React.FC<ExecutiveBookingViewProps> = ({
         {/* 5. MAPA INTERACTIVO COMPACTO                                              */}
         {/* ========================================================================= */}
         <div className="w-full h-40 sm:h-44 rounded-2xl overflow-hidden border border-slate-200 dark:border-zinc-800 shadow-xs relative">
-          <MapComponent
-            isDarkMode={isDark}
-            origin={currentOriginCoords}
-            destination={currentDestCoords}
-            serviceType="ejecutivo_quito"
-            systemTariffs={systemTariffs}
-          />
+          <React.Suspense fallback={<div className="w-full h-full bg-slate-900 animate-pulse" />}>
+            <MapComponent
+              isDarkMode={isDark}
+              origin={currentOriginCoords}
+              destination={currentDestCoords}
+              serviceType="ejecutivo_quito"
+              systemTariffs={systemTariffs}
+            />
+          </React.Suspense>
         </div>
 
         {/* ========================================================================= */}

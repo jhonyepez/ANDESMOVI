@@ -16,6 +16,7 @@ import {
 import { ECUADOR_GEOGRAPHY, getCantonsForProvince } from '../data/ecuador_geography';
 import { LegalTermsModal, LegalDocType } from './LegalTermsModal';
 import { SocialRegistrationModal, SocialAuthInitialData } from './SocialRegistrationModal';
+import { CameraPhotoCapture } from './CameraPhotoCapture';
 import { databaseService } from '../services/databaseService';
 import { processLoginSessionMiddleware } from '../services/sessionMiddleware';
 import {
@@ -104,6 +105,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [regVehicleModel, setRegVehicleModel] = useState<string>('Chevrolet Sail Sedán');
   const [regVehiclePlate, setRegVehiclePlate] = useState<string>('PBA-8321');
   const [regFullName, setRegFullName] = useState<string>('');
+  const [regPhotoUrl, setRegPhotoUrl] = useState<string>('');
   const [regEmail, setRegEmail] = useState<string>('');
   const [regPassword, setRegPassword] = useState<string>('');
   const [regConfirmPassword, setRegConfirmPassword] = useState<string>('');
@@ -397,7 +399,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         cedulaVerified: true,
         province: regProvince,
         canton: regCanton,
-        avatar: '',
+        avatar:
+          regPhotoUrl ||
+          (regAccountType === 'conductor'
+            ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
+            : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80'),
         authProvider: 'email',
         rating: 5.0,
         totalTripsCompleted: 0,
@@ -1125,6 +1131,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     </div>
                   </div>
                 )}
+
+                {/* Foto de Rostro Real en Tiempo Real con Cámara Frontal */}
+                <CameraPhotoCapture
+                  value={regPhotoUrl}
+                  onChange={setRegPhotoUrl}
+                  onClear={() => setRegPhotoUrl('')}
+                  label="Foto de Rostro en Tiempo Real (Cámara)"
+                  description="Tómate una foto directamente con la cámara de tu teléfono o dispositivo para tu cuenta en AndesMovi."
+                  isDark={isDark}
+                  accountRole={regAccountType}
+                />
 
                 {/* Nombre Completo */}
                 <div>

@@ -76,7 +76,8 @@ import { ALL_PARCEL_OFFICES } from '../data/sanCristobalOffices';
 import { AdminBankAccountsList } from './admin/AdminBankAccountsList';
 import { WalletModal } from './WalletModal';
 import { ChatModal } from './ChatModal';
-import { CallModal, CallParticipant } from './CallModal';
+import type { CallParticipant } from './CallModal';
+const CallModal = React.lazy(() => import('./CallModal'));
 import { WalletRechargeRequest, ChatMessage, Coordinates } from '../types';
 import { getCoordinatesForEcuadorProvince } from '../data/ecuador_geography';
 import { pushNotificationService } from '../services/notificationService';
@@ -4361,15 +4362,17 @@ Presentado por Conductor Oficial AndesMovi`;
 
       {/* Llamadas VoIP / WebRTC por Internet de Conductor a Cliente */}
       {showDriverCallModal && activeJob && (
-        <CallModal
-          participant={{
-            name: activeJob.order.clientName,
-            avatar: activeJob.order.clientAvatar,
-            role: 'cliente',
-            phoneMasked: activeJob.order.clientPhone,
-          }}
-          onClose={() => setShowDriverCallModal(false)}
-        />
+        <React.Suspense fallback={null}>
+          <CallModal
+            participant={{
+              name: activeJob.order.clientName,
+              avatar: activeJob.order.clientAvatar,
+              role: 'cliente',
+              phoneMasked: activeJob.order.clientPhone,
+            }}
+            onClose={() => setShowDriverCallModal(false)}
+          />
+        </React.Suspense>
       )}
 
       {/* Modal Obligatorio de Registro Social (Cédula + Consulta SRI + Teléfono) para Conductor */}
